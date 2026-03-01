@@ -1,0 +1,11 @@
+input/*
+models/*
+output/*
+!input/.gitkeep
+!models/.gitkeep
+!output/.gitkeep
+
+# Misc
+.DS_Store
+.claude*
+CLAUDE.md
