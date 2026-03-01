@@ -33,7 +33,7 @@ The build clones the Demucs source, installs PyTorch with CUDA 11.8 support, pat
 ## Usage
 ### Clone this repository
 ```bash
-git clone https://github.com/xserrat/docker-facebook-demucs.git demucs
+git clone git@github.com:ross-ethridge/demucs.git
 ```
 
 ### Split a music track
