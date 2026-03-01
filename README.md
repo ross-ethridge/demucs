@@ -21,29 +21,24 @@ This repository wraps Demucs in a Docker container so it can be run without manu
 - [Docker](https://docs.docker.com/get-docker/)
 - An Nvidia GPU with CUDA support is optional but strongly recommended for reasonable performance. The image uses CUDA 11.8 wheels and supports Ada Lovelace GPUs (e.g. RTX 4060) and earlier. Nvidia drivers 450.80.02+ are required for GPU use.
 
-## Building the Image
+## Usage
 
-Build the Docker image locally:
+1. Clone this repository:
+```bash
+git clone git@github.com:ross-ethridge/demucs.git
+cd demucs
+```
+2. Build the Docker image:
 ```bash
 make build
 ```
+The build clones the Demucs source, installs PyTorch with CUDA 11.8 support, patches torchaudio for compatibility, and pre-downloads the default `htdemucs` model (~80 MB). **Expect this to take 10–20 minutes** on the first run — it needs to download PyTorch, torchaudio, and all other Python dependencies before the model itself.
 
-The build clones the Demucs source, installs PyTorch with CUDA 11.8 support, patches torchaudio for compatibility, and pre-downloads the default `htdemucs` model (~80 MB). **Expect the first build to take 10–20 minutes** depending on your internet connection and machine speed — it needs to download PyTorch, torchaudio, and all other Python dependencies before the model itself.
-
-## Usage
-### Clone this repository
-```bash
-git clone git@github.com:ross-ethridge/demucs.git
-```
-
-### Split a music track
-1. Copy the track you want to split into the `input` folder (e.g., `input/mysong.mp3`).
-2. Run `demucs` via the `run` Makefile target, passing the filename as `track`:
+3. Copy the track you want to split into the `input` folder (e.g., `input/mysong.mp3`).
+4. Run `demucs`:
 ```bash
 make run track=mysong.mp3
 ```
-
-The `run` target builds the image automatically if it hasn't been built yet. On the first run it will also download any models not already cached in the `models/` folder.
 
 Separated stems are written to `output/<model>/<track-name>/` as individual `.wav` files.
 
