@@ -1,0 +1,122 @@
+require "open3"
+
+class ProcessTrackJob < ApplicationJob
+  queue_as :default
+
+  def perform(track_id)
+    track = Track.find(track_id)
+    track.update!(status: "processing", progress: 0)
+
+    cmd = build_docker_cmd(track)
+    Rails.logger.info("[ProcessTrackJob] Running: #{cmd}")
+    success = run_with_progress(cmd, track)
+
+    if success
+      upload_stems(track)
+      FileUtils.rm_rf(local_output_dir(track))
+      track.update!(status: "done", progress: 100)
+    else
+      track.update!(status: "failed", progress: track.progress)
+    end
+  rescue ActiveRecord::RecordNotFound
+    Rails.logger.error("[ProcessTrackJob] Track #{track_id} not found")
+  rescue => e
+    Rails.logger.error("[ProcessTrackJob] #{e.class}: #{e.message}")
+    track&.update!(status: "failed")
+  end
+
+  private
+
+  def run_with_progress(cmd, track)
+    # htdemucs_ft is a bag of 4 models — each runs 0→100% in sequence.
+    # We map each model's progress onto a 0–100% overall scale.
+    exit_status = nil
+    run_index  = 0
+    last_pct   = -1
+    buf        = ""
+
+    Open3.popen2e(cmd) do |stdin, output, wait_thr|
+      stdin.close
+      loop do
+        begin
+          # readpartial returns as soon as ANY bytes arrive, not waiting for \n
+          buf += output.readpartial(2048)
+          # Process everything up to each \r or \n
+          while (idx = buf.index(/[\r\n]/))
+            segment = buf[0, idx].strip
+            buf     = buf[idx + 1..]
+            next if segment.empty?
+
+            if (match = segment.match(/(\d+)%\|/))
+              per_model_pct = match[1].to_i
+              # Detect wrap-around to a new model run (100 → 0)
+              run_index += 1 if per_model_pct < last_pct
+              last_pct = per_model_pct
+              overall  = ((run_index * 100 + per_model_pct) / 4.0).round
+              track.update!(progress: overall) if overall != track.progress
+            else
+              Rails.logger.info("[ProcessTrackJob] demucs: #{segment}")
+            end
+          end
+        rescue EOFError
+          break
+        end
+      end
+      exit_status = wait_thr.value
+    end
+    exit_status.success?
+  end
+
+  def upload_stems(track)
+    track.stems.each do |stem|
+      local = track.stem_path(stem)
+      Rails.logger.info("[ProcessTrackJob] Uploading #{stem} to S3")
+      S3Storage.upload(track, stem, local)
+    end
+  end
+
+  def local_output_dir(track)
+    File.join(Rails.application.config.demucs_output_path,
+              "htdemucs_ft", track.stem_name)
+  end
+
+  def build_docker_cmd(track)
+    config = Rails.application.config
+
+    image       = ENV.fetch("DEMUCS_IMAGE", config.demucs_image)
+    gpu         = ENV.fetch("DEMUCS_GPU", "false") == "true"
+    use_volumes = ENV.fetch("DEMUCS_USE_VOLUMES", "false") == "true"
+
+    if use_volumes
+      input_vol  = ENV.fetch("DEMUCS_INPUT_VOLUME",  "demucs_input")
+      output_vol = ENV.fetch("DEMUCS_OUTPUT_VOLUME", "demucs_output")
+      models_vol = ENV.fetch("DEMUCS_MODELS_VOLUME", "demucs_models")
+      v_input  = "#{input_vol}:/data/input"
+      v_output = "#{output_vol}:/data/output"
+      v_models = "#{models_vol}:/data/models"
+    else
+      input_path  = File.expand_path(ENV.fetch("DEMUCS_INPUT_PATH",  config.demucs_input_path))
+      output_path = File.expand_path(ENV.fetch("DEMUCS_OUTPUT_PATH", config.demucs_output_path))
+      models_path = File.expand_path(ENV.fetch("DEMUCS_MODELS_PATH", config.demucs_models_path))
+      v_input  = "#{input_path}:/data/input"
+      v_output = "#{output_path}:/data/output"
+      v_models = "#{models_path}:/data/models"
+    end
+
+    gpu_flag       = gpu ? "--gpus all" : ""
+    container_name = "demucs-#{track.id}"
+    quoted_file    = Shellwords.escape("/data/input/#{track.filename}")
+
+    [
+      "docker run --rm -i",
+      gpu_flag,
+      "--name=#{container_name}",
+      "-e PYTHONUNBUFFERED=1",
+      "-v #{v_input}",
+      "-v #{v_output}",
+      "-v #{v_models}",
+      image,
+      %Q("python3 -m demucs -n htdemucs_ft --out /data/output --shifts 1 --overlap 0.25 -j 1 #{quoted_file}")
+    ].reject(&:empty?).join(" ")
+  end
+end

@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:16
+    restart: always
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: demucs_production
+    ports:
+      - "5432:5432"
+
+  web:
+    build: ./web
+    restart: always
+    ports:
+      - "3000:80"
+    env_file:
+      - .env
+    environment:
+      RAILS_ENV: production
+      RAILS_SERVE_STATIC_FILES: "true"
+      RAILS_LOG_TO_STDOUT: "true"
+      DB_HOST: db
+      DEMUCS_USE_VOLUMES: "true"
+      DEMUCS_INPUT_VOLUME: demucs_input
+      DEMUCS_OUTPUT_VOLUME: demucs_output
+      DEMUCS_MODELS_VOLUME: demucs_models
+      DEMUCS_INPUT_PATH: /data/input
+      DEMUCS_OUTPUT_PATH: /data/output
+      DEMUCS_MODELS_PATH: /data/models
+      SOLID_QUEUE_IN_PUMA: "true"
+      AWS_ACCESS_KEY_ID:     ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION:            ${AWS_REGION}
+      AWS_BUCKET:            ${AWS_BUCKET}
+    depends_on:
+      - db
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - input:/data/input
+      - output:/data/output
+      - models:/data/models
+
+volumes:
+  pgdata:
+  input:
+    name: demucs_input
+  output:
+    name: demucs_output
+  models:
+    name: demucs_models

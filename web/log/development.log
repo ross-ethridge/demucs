@@ -1,0 +1,491 @@
+  [1m[35m (2.4ms)[0m  [1m[35mCREATE TABLE "schema_migrations" ("version" varchar NOT NULL PRIMARY KEY) /*application='Web'*/[0m
+  [1m[35m (0.1ms)[0m  [1m[35mCREATE TABLE "ar_internal_metadata" ("key" varchar NOT NULL PRIMARY KEY, "value" varchar, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL) /*application='Web'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.1ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Web'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Create (0.1ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('environment', 'development', '2026-03-02 04:43:03.523813', '2026-03-02 04:43:03.523814') RETURNING "key" /*application='Web'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.1ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Web'*/[0m
+Migrating to CreateTracks (20260301000000)
+  [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mBEGIN immediate TRANSACTION /*application='Web'*/[0m
+  [1m[35m (0.5ms)[0m  [1m[35mCREATE TABLE "tracks" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "name" varchar NOT NULL, "filename" varchar NOT NULL, "status" varchar DEFAULT 'pending', "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL) /*application='Web'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.1ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260301000000') RETURNING "version" /*application='Web'*/[0m
+  [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mCOMMIT TRANSACTION /*application='Web'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Web'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.3ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Web'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Web'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Web'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.1ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Web'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Web'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Web'*/[0m
+Started GET "/" for 127.0.0.1 at 2026-03-01 22:56:00 -0600
+  [1m[36mActiveRecord::SchemaMigration Load (0.1ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Web'*/[0m
+Processing by TracksController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering tracks/index.html.erb within layouts/application
+  [1m[36mTrack Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "tracks" LIMIT 1 /*action='index',application='Web',controller='tracks'*/[0m
+  ↳ app/views/tracks/index.html.erb:13
+  Rendered tracks/index.html.erb within layouts/application (Duration: 4.2ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 12.5ms | GC: 0.0ms)
+Completed 200 OK in 56ms (Views: 18.2ms | ActiveRecord: 0.7ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/cable" for 127.0.0.1 at 2026-03-01 22:56:00 -0600
+Started GET "/cable" [WebSocket] for 127.0.0.1 at 2026-03-01 22:56:00 -0600
+Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+Turbo::StreamsChannel is transmitting the subscription confirmation
+Turbo::StreamsChannel is streaming from tracks
+Started GET "/tracks/new" for 127.0.0.1 at 2026-03-01 22:56:13 -0600
+Processing by TracksController#new as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering tracks/new.html.erb within layouts/application
+  Rendered tracks/new.html.erb within layouts/application (Duration: 11.9ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 12.3ms | GC: 0.0ms)
+Completed 200 OK in 19ms (Views: 12.6ms | ActiveRecord: 0.5ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/tracks/new" for 127.0.0.1 at 2026-03-01 22:56:16 -0600
+Processing by TracksController#new as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering tracks/new.html.erb within layouts/application
+  Rendered tracks/new.html.erb within layouts/application (Duration: 0.5ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 0.9ms | GC: 0.0ms)
+Completed 200 OK in 2ms (Views: 1.2ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Unsubscribing from channel: {"channel":"Turbo::StreamsChannel","signed_stream_name":"InRyYWNrcyI=--45cdc59e306baf50eaa664d55b3c3a19e6ee0d517155bb0f421a7121d348df0a"}
+Turbo::StreamsChannel stopped streaming from tracks
+Started POST "/tracks" for 127.0.0.1 at 2026-03-01 22:56:45 -0600
+Processing by TracksController#create as TURBO_STREAM
+  Parameters: {"authenticity_token" => "[FILTERED]", "track" => {"name" => "", "file" => #<ActionDispatch::Http::UploadedFile:0x0000712c2abc7588 @tempfile=#<Tempfile:/tmp/RackMultipart20260301-15544-mzvh7u.wav>, @content_type="audio/wav", @original_filename="Shimmy-SommerSons-Vocals.wav", @headers="Content-Disposition: form-data; name=\"track[file]\"; filename=\"Shimmy-SommerSons-Vocals.wav\"\r\nContent-Type: audio/wav\r\n">}, "commit" => "Upload & Process"}
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN immediate TRANSACTION /*action='create',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:26:in 'TracksController#create'
+  [1m[36mTrack Create (0.8ms)[0m  [1m[32mINSERT INTO "tracks" ("name", "filename", "status", "created_at", "updated_at") VALUES ('Shimmy-SommerSons-Vocals', 'Shimmy-SommerSons-Vocals.wav', 'pending', '2026-03-02 04:56:45.228648', '2026-03-02 04:56:45.228648') RETURNING "id" /*action='create',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:26:in 'TracksController#create'
+  [1m[36mTRANSACTION (3.7ms)[0m  [1m[35mCOMMIT TRANSACTION /*action='create',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:26:in 'TracksController#create'
+[ActiveJob] Enqueued ProcessTrackJob (Job ID: 357ca904-0694-47b7-b35e-eb235e897d3f) to Async(default) with arguments: 1
+[ActiveJob] ↳ app/controllers/tracks_controller.rb:27:in 'TracksController#create'
+Redirected to http://localhost:3000/tracks/1
+↳ app/controllers/tracks_controller.rb:28:in 'TracksController#create'
+Completed 302 Found in 65ms (ActiveRecord: 4.6ms (1 query, 0 cached) | GC: 2.6ms)
+
+
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f] Performing ProcessTrackJob (Job ID: 357ca904-0694-47b7-b35e-eb235e897d3f) from Async(default) enqueued at 2026-03-02T04:56:45.256110756Z with arguments: 1
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 1 LIMIT 1 /*application='Web',job='ProcessTrackJob'*/[0m
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   ↳ app/jobs/process_track_job.rb:5:in 'ProcessTrackJob#perform'
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mBEGIN immediate TRANSACTION /*application='Web',job='ProcessTrackJob'*/[0m
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   ↳ app/jobs/process_track_job.rb:6:in 'ProcessTrackJob#perform'
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   [1m[36mTrack Update (0.8ms)[0m  [1m[33mUPDATE "tracks" SET "status" = 'processing', "updated_at" = '2026-03-02 04:56:45.260954' WHERE "tracks"."id" = 1 /*application='Web',job='ProcessTrackJob'*/[0m
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   ↳ app/jobs/process_track_job.rb:6:in 'ProcessTrackJob#perform'
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mCOMMIT TRANSACTION /*application='Web',job='ProcessTrackJob'*/[0m
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   ↳ app/jobs/process_track_job.rb:6:in 'ProcessTrackJob#perform'
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   Rendered tracks/_track.html.erb (Duration: 0.7ms | GC: 0.0ms)
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f] [ActionCable] Broadcasting to tracks: "<turbo-stream action=\"replace\" target=\"track_1\"><template><!-- BEGIN app/views/tracks/_track.html.erb\n--><turbo-frame id=\"track_1\">\n  <div style=\"border:1px solid #ddd;border-radius:6px;padding:1rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;background:#fff;\">\n    ...
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   Rendered tracks/_track.html.erb (Duration: 0.3ms | GC: 0.0ms)
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f] [ActionCable] Broadcasting to Z2lkOi8vd2ViL1RyYWNrLzE: "<turbo-stream action=\"replace\" target=\"track_1\"><template><!-- BEGIN app/views/tracks/_track.html.erb\n--><turbo-frame id=\"track_1\">\n  <div style=\"border:1px solid #ddd;border-radius:6px;padding:1rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;background:#fff;\">\n    ...
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f] [ProcessTrackJob] Running: docker run --rm -i --name=demucs-1 -v /home/rossethridge/git/demucs/input:/data/input -v /home/rossethridge/git/demucs/output:/data/output -v /home/rossethridge/git/demucs/models:/data/models xserrat/facebook-demucs:latest "python3 -m demucs -n htdemucs --out /data/output --shifts 1 --overlap 0.25 -j 1 /data/input/Shimmy-SommerSons-Vocals.wav"
+Started GET "/tracks/1" for 127.0.0.1 at 2026-03-01 22:56:45 -0600
+Processing by TracksController#show as TURBO_STREAM
+  Parameters: {"id" => "1"}
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 1 LIMIT 1 /*action='show',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:63:in 'TracksController#set_track'
+  Rendering layout layouts/application.html.erb
+  Rendering tracks/show.html.erb within layouts/application
+  Rendered tracks/show.html.erb within layouts/application (Duration: 1.2ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 1.7ms | GC: 0.0ms)
+Completed 200 OK in 4ms (Views: 2.2ms | ActiveRecord: 0.1ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Turbo::StreamsChannel is transmitting the subscription confirmation
+Turbo::StreamsChannel is streaming from Z2lkOi8vd2ViL1RyYWNrLzE
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN immediate TRANSACTION /*application='Web',job='ProcessTrackJob'*/[0m
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   ↳ app/jobs/process_track_job.rb:12:in 'ProcessTrackJob#perform'
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   [1m[36mTrack Update (0.9ms)[0m  [1m[33mUPDATE "tracks" SET "status" = 'done', "updated_at" = '2026-03-02 04:59:50.865147' WHERE "tracks"."id" = 1 /*application='Web',job='ProcessTrackJob'*/[0m
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   ↳ app/jobs/process_track_job.rb:12:in 'ProcessTrackJob#perform'
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mCOMMIT TRANSACTION /*application='Web',job='ProcessTrackJob'*/[0m
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   ↳ app/jobs/process_track_job.rb:12:in 'ProcessTrackJob#perform'
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   Rendered tracks/_track.html.erb (Duration: 0.3ms | GC: 0.0ms)
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f] [ActionCable] Broadcasting to tracks: "<turbo-stream action=\"replace\" target=\"track_1\"><template><!-- BEGIN app/views/tracks/_track.html.erb\n--><turbo-frame id=\"track_1\">\n  <div style=\"border:1px solid #ddd;border-radius:6px;padding:1rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;background:#fff;\">\n    ...
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f]   Rendered tracks/_track.html.erb (Duration: 0.2ms | GC: 0.0ms)
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f] [ActionCable] Broadcasting to Z2lkOi8vd2ViL1RyYWNrLzE: "<turbo-stream action=\"replace\" target=\"track_1\"><template><!-- BEGIN app/views/tracks/_track.html.erb\n--><turbo-frame id=\"track_1\">\n  <div style=\"border:1px solid #ddd;border-radius:6px;padding:1rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;background:#fff;\">\n    ...
+[ActiveJob] [ProcessTrackJob] [357ca904-0694-47b7-b35e-eb235e897d3f] Performed ProcessTrackJob (Job ID: 357ca904-0694-47b7-b35e-eb235e897d3f) from Async(default) in 181951.31ms
+Turbo::StreamsChannel transmitting "<turbo-stream action=\"replace\" target=\"track_1\"><template><!-- BEGIN app/views/tracks/_track.html.erb\n--><turbo-frame id=\"track_1\">\n  <div style=\"border:1px solid #ddd;border-radius:6px;padding:1rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;background:#fff;\">\n    ... (via streamed from Z2lkOi8vd2ViL1RyYWNrLzE)
+Started GET "/tracks/1" for 127.0.0.1 at 2026-03-01 23:01:03 -0600
+Processing by TracksController#show as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 1 LIMIT 1 /*action='show',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:63:in 'TracksController#set_track'
+  Rendering layout /home/rossethridge/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/turbo-rails-2.0.23/app/views/layouts/turbo_rails/frame.html.erb
+  Rendering tracks/show.html.erb within layouts/turbo_rails/frame
+  Rendered tracks/show.html.erb within layouts/turbo_rails/frame (Duration: 1.0ms | GC: 0.0ms)
+  Rendered layout /home/rossethridge/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/turbo-rails-2.0.23/app/views/layouts/turbo_rails/frame.html.erb (Duration: 1.5ms | GC: 0.0ms)
+Completed 200 OK in 7ms (Views: 5.6ms | ActiveRecord: 0.1ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/tracks/1/download_stem?stem=vocals" for 127.0.0.1 at 2026-03-01 23:01:06 -0600
+Processing by TracksController#download_stem as HTML
+  Parameters: {"stem" => "vocals", "id" => "1"}
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 1 LIMIT 1 /*action='download_stem',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:63:in 'TracksController#set_track'
+Sent file /home/rossethridge/git/demucs/output/htdemucs/Shimmy-SommerSons-Vocals/vocals.wav (0.1ms)
+Completed 200 OK in 1ms (ActiveRecord: 0.1ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Finished "/cable" [WebSocket] for 127.0.0.1 at 2026-03-01 23:01:20 -0600
+Turbo::StreamsChannel stopped streaming from Z2lkOi8vd2ViL1RyYWNrLzE
+Started GET "/" for 127.0.0.1 at 2026-03-01 23:04:39 -0600
+  [1m[36mActiveRecord::SchemaMigration Load (0.1ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Web'*/[0m
+Processing by TracksController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering tracks/index.html.erb within layouts/application
+  [1m[36mTrack Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "tracks" LIMIT 1 /*action='index',application='Web',controller='tracks'*/[0m
+  ↳ app/views/tracks/index.html.erb:13
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" ORDER BY "tracks"."created_at" DESC /*action='index',application='Web',controller='tracks'*/[0m
+  ↳ app/views/tracks/index.html.erb:20
+  Rendered collection of tracks/_track.html.erb [1 times] (Duration: 2.5ms | GC: 0.0ms)
+  Rendered tracks/index.html.erb within layouts/application (Duration: 7.2ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 11.7ms | GC: 0.0ms)
+Completed 200 OK in 20ms (Views: 12.5ms | ActiveRecord: 0.9ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/cable" for 127.0.0.1 at 2026-03-01 23:04:40 -0600
+Started GET "/cable" [WebSocket] for 127.0.0.1 at 2026-03-01 23:04:40 -0600
+Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+Turbo::StreamsChannel is transmitting the subscription confirmation
+Turbo::StreamsChannel is streaming from tracks
+Started GET "/tracks/new" for 127.0.0.1 at 2026-03-01 23:04:46 -0600
+Processing by TracksController#new as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering tracks/new.html.erb within layouts/application
+  Rendered tracks/new.html.erb within layouts/application (Duration: 0.8ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 1.4ms | GC: 0.0ms)
+Completed 200 OK in 3ms (Views: 2.0ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/tracks/new" for 127.0.0.1 at 2026-03-01 23:04:46 -0600
+Processing by TracksController#new as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering tracks/new.html.erb within layouts/application
+  Rendered tracks/new.html.erb within layouts/application (Duration: 0.5ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 1.1ms | GC: 0.0ms)
+Completed 200 OK in 2ms (Views: 1.4ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Unsubscribing from channel: {"channel":"Turbo::StreamsChannel","signed_stream_name":"InRyYWNrcyI=--45cdc59e306baf50eaa664d55b3c3a19e6ee0d517155bb0f421a7121d348df0a"}
+Turbo::StreamsChannel stopped streaming from tracks
+Started POST "/tracks" for 127.0.0.1 at 2026-03-01 23:05:36 -0600
+Processing by TracksController#create as TURBO_STREAM
+  Parameters: {"authenticity_token" => "[FILTERED]", "track" => {"name" => "", "file" => #<ActionDispatch::Http::UploadedFile:0x000072142e03c0a0 @tempfile=#<Tempfile:/tmp/RackMultipart20260301-15991-i5lovs.wav>, @content_type="audio/wav", @original_filename="Repentance-Tyrone.wav", @headers="Content-Disposition: form-data; name=\"track[file]\"; filename=\"Repentance-Tyrone.wav\"\r\nContent-Type: audio/wav\r\n">}, "commit" => "Upload & Process"}
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN immediate TRANSACTION /*action='create',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:26:in 'TracksController#create'
+  [1m[36mTrack Create (0.7ms)[0m  [1m[32mINSERT INTO "tracks" ("name", "filename", "status", "created_at", "updated_at") VALUES ('Repentance-Tyrone', 'Repentance-Tyrone.wav', 'pending', '2026-03-02 05:05:36.765783', '2026-03-02 05:05:36.765783') RETURNING "id" /*action='create',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:26:in 'TracksController#create'
+  [1m[36mTRANSACTION (7.0ms)[0m  [1m[35mCOMMIT TRANSACTION /*action='create',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:26:in 'TracksController#create'
+[ActiveJob] Enqueued ProcessTrackJob (Job ID: 1fe6fada-8706-4df5-88f1-6da622084e63) to Async(default) with arguments: 2
+[ActiveJob] ↳ app/controllers/tracks_controller.rb:27:in 'TracksController#create'
+Redirected to http://localhost:3000/tracks/2
+↳ app/controllers/tracks_controller.rb:28:in 'TracksController#create'
+Completed 302 Found in 93ms (ActiveRecord: 7.7ms (1 query, 0 cached) | GC: 1.7ms)
+
+
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63] Performing ProcessTrackJob (Job ID: 1fe6fada-8706-4df5-88f1-6da622084e63) from Async(default) enqueued at 2026-03-02T05:05:36.779554092Z with arguments: 2
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   [1m[36mTrack Load (0.2ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 2 LIMIT 1 /*application='Web',job='ProcessTrackJob'*/[0m
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   ↳ app/jobs/process_track_job.rb:5:in 'ProcessTrackJob#perform'
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mBEGIN immediate TRANSACTION /*application='Web',job='ProcessTrackJob'*/[0m
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   ↳ app/jobs/process_track_job.rb:6:in 'ProcessTrackJob#perform'
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   [1m[36mTrack Update (0.6ms)[0m  [1m[33mUPDATE "tracks" SET "status" = 'processing', "updated_at" = '2026-03-02 05:05:36.784535' WHERE "tracks"."id" = 2 /*application='Web',job='ProcessTrackJob'*/[0m
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   ↳ app/jobs/process_track_job.rb:6:in 'ProcessTrackJob#perform'
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mCOMMIT TRANSACTION /*application='Web',job='ProcessTrackJob'*/[0m
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   ↳ app/jobs/process_track_job.rb:6:in 'ProcessTrackJob#perform'
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   Rendered tracks/_track.html.erb (Duration: 1.0ms | GC: 0.0ms)
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63] [ActionCable] Broadcasting to tracks: "<turbo-stream action=\"replace\" target=\"track_2\"><template><!-- BEGIN app/views/tracks/_track.html.erb\n--><turbo-frame id=\"track_2\">\n  <div style=\"border:1px solid #ddd;border-radius:6px;padding:1rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;background:#fff;\">\n    ...
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   Rendered tracks/_track.html.erb (Duration: 0.2ms | GC: 0.0ms)
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63] [ActionCable] Broadcasting to Z2lkOi8vd2ViL1RyYWNrLzI: "<turbo-stream action=\"replace\" target=\"track_2\"><template><!-- BEGIN app/views/tracks/_track.html.erb\n--><turbo-frame id=\"track_2\">\n  <div style=\"border:1px solid #ddd;border-radius:6px;padding:1rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;background:#fff;\">\n    ...
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63] [ProcessTrackJob] Running: docker run --rm -i --gpus all --name=demucs-2 -v /home/rossethridge/git/demucs/input:/data/input -v /home/rossethridge/git/demucs/output:/data/output -v /home/rossethridge/git/demucs/models:/data/models xserrat/facebook-demucs:latest "python3 -m demucs -n htdemucs --out /data/output --shifts 1 --overlap 0.25 -j 1 /data/input/Repentance-Tyrone.wav"
+Started GET "/tracks/2" for 127.0.0.1 at 2026-03-01 23:05:36 -0600
+Processing by TracksController#show as TURBO_STREAM
+  Parameters: {"id" => "2"}
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 2 LIMIT 1 /*action='show',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:63:in 'TracksController#set_track'
+  Rendering layout layouts/application.html.erb
+  Rendering tracks/show.html.erb within layouts/application
+  Rendered tracks/show.html.erb within layouts/application (Duration: 1.2ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 1.8ms | GC: 0.0ms)
+Completed 200 OK in 3ms (Views: 2.0ms | ActiveRecord: 0.1ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Turbo::StreamsChannel is transmitting the subscription confirmation
+Turbo::StreamsChannel is streaming from Z2lkOi8vd2ViL1RyYWNrLzI
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mBEGIN immediate TRANSACTION /*application='Web',job='ProcessTrackJob'*/[0m
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   ↳ app/jobs/process_track_job.rb:12:in 'ProcessTrackJob#perform'
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   [1m[36mTrack Update (0.9ms)[0m  [1m[33mUPDATE "tracks" SET "status" = 'done', "updated_at" = '2026-03-02 05:05:48.667188' WHERE "tracks"."id" = 2 /*application='Web',job='ProcessTrackJob'*/[0m
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   ↳ app/jobs/process_track_job.rb:12:in 'ProcessTrackJob#perform'
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mCOMMIT TRANSACTION /*application='Web',job='ProcessTrackJob'*/[0m
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   ↳ app/jobs/process_track_job.rb:12:in 'ProcessTrackJob#perform'
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   Rendered tracks/_track.html.erb (Duration: 0.4ms | GC: 0.0ms)
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63] [ActionCable] Broadcasting to tracks: "<turbo-stream action=\"replace\" target=\"track_2\"><template><!-- BEGIN app/views/tracks/_track.html.erb\n--><turbo-frame id=\"track_2\">\n  <div style=\"border:1px solid #ddd;border-radius:6px;padding:1rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;background:#fff;\">\n    ...
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63]   Rendered tracks/_track.html.erb (Duration: 0.2ms | GC: 0.0ms)
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63] [ActionCable] Broadcasting to Z2lkOi8vd2ViL1RyYWNrLzI: "<turbo-stream action=\"replace\" target=\"track_2\"><template><!-- BEGIN app/views/tracks/_track.html.erb\n--><turbo-frame id=\"track_2\">\n  <div style=\"border:1px solid #ddd;border-radius:6px;padding:1rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;background:#fff;\">\n    ...
+[ActiveJob] [ProcessTrackJob] [1fe6fada-8706-4df5-88f1-6da622084e63] Performed ProcessTrackJob (Job ID: 1fe6fada-8706-4df5-88f1-6da622084e63) from Async(default) in 11888.72ms
+Turbo::StreamsChannel transmitting "<turbo-stream action=\"replace\" target=\"track_2\"><template><!-- BEGIN app/views/tracks/_track.html.erb\n--><turbo-frame id=\"track_2\">\n  <div style=\"border:1px solid #ddd;border-radius:6px;padding:1rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;background:#fff;\">\n    ... (via streamed from Z2lkOi8vd2ViL1RyYWNrLzI)
+Started GET "/tracks/2" for 127.0.0.1 at 2026-03-01 23:05:51 -0600
+Processing by TracksController#show as HTML
+  Parameters: {"id" => "2"}
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 2 LIMIT 1 /*action='show',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:63:in 'TracksController#set_track'
+  Rendering layout /home/rossethridge/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/turbo-rails-2.0.23/app/views/layouts/turbo_rails/frame.html.erb
+  Rendering tracks/show.html.erb within layouts/turbo_rails/frame
+  Rendered tracks/show.html.erb within layouts/turbo_rails/frame (Duration: 1.3ms | GC: 0.0ms)
+  Rendered layout /home/rossethridge/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/turbo-rails-2.0.23/app/views/layouts/turbo_rails/frame.html.erb (Duration: 1.7ms | GC: 0.0ms)
+Completed 200 OK in 4ms (Views: 2.4ms | ActiveRecord: 0.1ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/tracks" for 127.0.0.1 at 2026-03-01 23:06:00 -0600
+Processing by TracksController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering tracks/index.html.erb within layouts/application
+  [1m[36mTrack Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "tracks" LIMIT 1 /*action='index',application='Web',controller='tracks'*/[0m
+  ↳ app/views/tracks/index.html.erb:13
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" ORDER BY "tracks"."created_at" DESC /*action='index',application='Web',controller='tracks'*/[0m
+  ↳ app/views/tracks/index.html.erb:20
+  Rendered collection of tracks/_track.html.erb [2 times] (Duration: 0.9ms | GC: 0.0ms)
+  Rendered tracks/index.html.erb within layouts/application (Duration: 2.7ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 3.1ms | GC: 0.0ms)
+Completed 200 OK in 4ms (Views: 3.3ms | ActiveRecord: 0.1ms (2 queries, 0 cached) | GC: 0.1ms)
+
+
+Unsubscribing from channel: {"channel":"Turbo::StreamsChannel","signed_stream_name":"IloybGtPaTh2ZDJWaUwxUnlZV05yTHpJIg==--7c52dbd9f916950142da25797618d95f2e29484b3142b7f8ef0b4016d40a8110"}
+Turbo::StreamsChannel stopped streaming from Z2lkOi8vd2ViL1RyYWNrLzI
+Turbo::StreamsChannel is transmitting the subscription confirmation
+Turbo::StreamsChannel is streaming from tracks
+Started GET "/tracks/1" for 127.0.0.1 at 2026-03-01 23:06:08 -0600
+Processing by TracksController#show as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 1 LIMIT 1 /*action='show',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:63:in 'TracksController#set_track'
+  Rendering layout /home/rossethridge/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/turbo-rails-2.0.23/app/views/layouts/turbo_rails/frame.html.erb
+  Rendering tracks/show.html.erb within layouts/turbo_rails/frame
+  Rendered tracks/show.html.erb within layouts/turbo_rails/frame (Duration: 0.9ms | GC: 0.0ms)
+  Rendered layout /home/rossethridge/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/turbo-rails-2.0.23/app/views/layouts/turbo_rails/frame.html.erb (Duration: 1.0ms | GC: 0.0ms)
+Completed 200 OK in 2ms (Views: 1.2ms | ActiveRecord: 0.1ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/tracks/1" for 127.0.0.1 at 2026-03-01 23:06:09 -0600
+Processing by TracksController#show as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 1 LIMIT 1 /*action='show',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:63:in 'TracksController#set_track'
+  Rendering layout /home/rossethridge/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/turbo-rails-2.0.23/app/views/layouts/turbo_rails/frame.html.erb
+  Rendering tracks/show.html.erb within layouts/turbo_rails/frame
+  Rendered tracks/show.html.erb within layouts/turbo_rails/frame (Duration: 0.8ms | GC: 0.0ms)
+  Rendered layout /home/rossethridge/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/turbo-rails-2.0.23/app/views/layouts/turbo_rails/frame.html.erb (Duration: 1.0ms | GC: 0.0ms)
+Completed 200 OK in 3ms (Views: 1.3ms | ActiveRecord: 0.1ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/tracks/1/download_stem?stem=bass" for 127.0.0.1 at 2026-03-01 23:06:13 -0600
+Processing by TracksController#download_stem as HTML
+  Parameters: {"stem" => "bass", "id" => "1"}
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 1 LIMIT 1 /*action='download_stem',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:63:in 'TracksController#set_track'
+Sent file /home/rossethridge/git/demucs/output/htdemucs/Shimmy-SommerSons-Vocals/bass.wav (0.2ms)
+Completed 200 OK in 2ms (ActiveRecord: 0.1ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/tracks/1/download_stem?stem=bass" for 127.0.0.1 at 2026-03-01 23:06:17 -0600
+Processing by TracksController#download_stem as HTML
+  Parameters: {"stem" => "bass", "id" => "1"}
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 1 LIMIT 1 /*action='download_stem',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:63:in 'TracksController#set_track'
+Sent file /home/rossethridge/git/demucs/output/htdemucs/Shimmy-SommerSons-Vocals/bass.wav (0.1ms)
+Completed 200 OK in 1ms (ActiveRecord: 0.1ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/tracks/1/download_stem?stem=other" for 127.0.0.1 at 2026-03-01 23:06:24 -0600
+Processing by TracksController#download_stem as HTML
+  Parameters: {"stem" => "other", "id" => "1"}
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 1 LIMIT 1 /*action='download_stem',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:63:in 'TracksController#set_track'
+Sent file /home/rossethridge/git/demucs/output/htdemucs/Shimmy-SommerSons-Vocals/other.wav (0.1ms)
+Completed 200 OK in 1ms (ActiveRecord: 0.1ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/tracks/1/download_stem?stem=bass" for 127.0.0.1 at 2026-03-01 23:06:24 -0600
+Processing by TracksController#download_stem as HTML
+  Parameters: {"stem" => "bass", "id" => "1"}
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 1 LIMIT 1 /*action='download_stem',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:63:in 'TracksController#set_track'
+Sent file /home/rossethridge/git/demucs/output/htdemucs/Shimmy-SommerSons-Vocals/bass.wav (0.1ms)
+Completed 200 OK in 1ms (ActiveRecord: 0.1ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/cable" for 127.0.0.1 at 2026-03-01 23:09:00 -0600
+  [1m[36mActiveRecord::SchemaMigration Load (0.1ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Web'*/[0m
+Started GET "/cable" [WebSocket] for 127.0.0.1 at 2026-03-01 23:09:00 -0600
+Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+Turbo::StreamsChannel is transmitting the subscription confirmation
+Turbo::StreamsChannel is streaming from tracks
+Started GET "/tracks" for 127.0.0.1 at 2026-03-01 23:09:02 -0600
+Processing by TracksController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering tracks/index.html.erb within layouts/application
+  [1m[36mTrack Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "tracks" LIMIT 1 /*action='index',application='Web',controller='tracks'*/[0m
+  ↳ app/views/tracks/index.html.erb:13
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" ORDER BY "tracks"."created_at" DESC /*action='index',application='Web',controller='tracks'*/[0m
+  ↳ app/views/tracks/index.html.erb:20
+  Rendered collection of tracks/_track.html.erb [2 times] (Duration: 2.8ms | GC: 0.0ms)
+  Rendered tracks/index.html.erb within layouts/application (Duration: 7.7ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 11.4ms | GC: 0.0ms)
+Completed 200 OK in 21ms (Views: 12.2ms | ActiveRecord: 0.9ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Finished "/cable" [WebSocket] for 127.0.0.1 at 2026-03-01 23:09:02 -0600
+Turbo::StreamsChannel stopped streaming from tracks
+Started GET "/cable" for 127.0.0.1 at 2026-03-01 23:09:02 -0600
+Started GET "/cable" [WebSocket] for 127.0.0.1 at 2026-03-01 23:09:02 -0600
+Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+Turbo::StreamsChannel is transmitting the subscription confirmation
+Turbo::StreamsChannel is streaming from tracks
+Started GET "/tracks/1" for 127.0.0.1 at 2026-03-01 23:09:03 -0600
+Processing by TracksController#show as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 1 LIMIT 1 /*action='show',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:63:in 'TracksController#set_track'
+  Rendering layout /home/rossethridge/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/turbo-rails-2.0.23/app/views/layouts/turbo_rails/frame.html.erb
+  Rendering tracks/show.html.erb within layouts/turbo_rails/frame
+  Rendered tracks/show.html.erb within layouts/turbo_rails/frame (Duration: 1.3ms | GC: 0.0ms)
+  Rendered layout /home/rossethridge/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/turbo-rails-2.0.23/app/views/layouts/turbo_rails/frame.html.erb (Duration: 2.1ms | GC: 0.0ms)
+Completed 200 OK in 5ms (Views: 2.6ms | ActiveRecord: 0.1ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/tracks/2" for 127.0.0.1 at 2026-03-01 23:09:03 -0600
+Processing by TracksController#show as HTML
+  Parameters: {"id" => "2"}
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 2 LIMIT 1 /*action='show',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:63:in 'TracksController#set_track'
+  Rendering layout /home/rossethridge/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/turbo-rails-2.0.23/app/views/layouts/turbo_rails/frame.html.erb
+  Rendering tracks/show.html.erb within layouts/turbo_rails/frame
+  Rendered tracks/show.html.erb within layouts/turbo_rails/frame (Duration: 0.8ms | GC: 0.0ms)
+  Rendered layout /home/rossethridge/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/turbo-rails-2.0.23/app/views/layouts/turbo_rails/frame.html.erb (Duration: 1.0ms | GC: 0.0ms)
+Completed 200 OK in 2ms (Views: 1.2ms | ActiveRecord: 0.1ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/tracks/2/download_stem?stem=bass" for 127.0.0.1 at 2026-03-01 23:09:06 -0600
+Processing by TracksController#download_stem as HTML
+  Parameters: {"stem" => "bass", "id" => "2"}
+  [1m[36mTrack Load (0.1ms)[0m  [1m[34mSELECT "tracks".* FROM "tracks" WHERE "tracks"."id" = 2 LIMIT 1 /*action='download_stem',application='Web',controller='tracks'*/[0m
+  ↳ app/controllers/tracks_controller.rb:63:in 'TracksController#set_track'
+Sent file /home/rossethridge/git/demucs/output/htdemucs/Repentance-Tyrone/bass.wav (0.2ms)
+Completed 200 OK in 2ms (ActiveRecord: 0.1ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+  [1m[35m (4715.6ms)[0m  [1m[35mCREATE DATABASE "demucs_development" ENCODING = 'unicode' /*application='Web'*/[0m
+  [1m[35mSQL (0.2ms)[0m  [1m[35mSET search_path TO public /*application='Web'*/[0m
+  [1m[35m (48.2ms)[0m  [1m[35mCREATE DATABASE "demucs_development" ENCODING = 'unicode' /*application='Web'*/[0m
+  [1m[35mSQL (0.3ms)[0m  [1m[35mSET search_path TO public /*application='Web'*/[0m
+  [1m[35m (58.7ms)[0m  [1m[35mCREATE DATABASE "demucs_test" ENCODING = 'unicode' /*application='Web'*/[0m
+  [1m[35m (0.3ms)[0m  [1m[35mDROP TABLE IF EXISTS "tracks" CASCADE /*application='Web'*/[0m
+  [1m[35m (9.0ms)[0m  [1m[35mCREATE TABLE "tracks" ("id" bigserial primary key, "created_at" timestamp(6) NOT NULL, "filename" character varying NOT NULL, "name" character varying NOT NULL, "status" character varying DEFAULT 'pending', "updated_at" timestamp(6) NOT NULL) /*application='Web'*/[0m
+  [1m[35m (6.5ms)[0m  [1m[35mCREATE TABLE "schema_migrations" ("version" character varying NOT NULL PRIMARY KEY) /*application='Web'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.5ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Web'*/[0m
+  [1m[35m (1.4ms)[0m  [1m[32mINSERT INTO "schema_migrations" (version) VALUES (20260301000000) /*application='Web'*/[0m
+  [1m[35m (6.6ms)[0m  [1m[35mCREATE TABLE "ar_internal_metadata" ("key" character varying NOT NULL PRIMARY KEY, "value" character varying, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL) /*application='Web'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.5ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Web'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Create (1.5ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('environment', 'development', '2026-03-02 05:56:54.961287', '2026-03-02 05:56:54.961288') RETURNING "key" /*application='Web'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.3ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Web'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.3ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'schema_sha1' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Web'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Create (1.2ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('schema_sha1', '109e8b2c05333663ea78e706cf22c8ffba7c0da4', '2026-03-02 05:56:54.965530', '2026-03-02 05:56:54.965531') RETURNING "key" /*application='Web'*/[0m
+  [1m[35m (0.3ms)[0m  [1m[34mSELECT pg_try_advisory_lock(960222822663551895) /*application='Web'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.3ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Web'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.3ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Web'*/[0m
+Migrating to CreateSolidQueueTables (20260301000001)
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN /*application='Web'*/[0m
+  [1m[35m (5.7ms)[0m  [1m[35mCREATE TABLE "solid_queue_jobs" ("id" bigserial primary key, "queue_name" character varying NOT NULL, "class_name" character varying NOT NULL, "arguments" text, "priority" integer DEFAULT 0 NOT NULL, "active_job_id" character varying, "scheduled_at" timestamp(6), "finished_at" timestamp(6), "concurrency_key" character varying, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL) /*application='Web'*/[0m
+  [1m[35m (3.9ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_jobs_on_active_job_id" ON "solid_queue_jobs" ("active_job_id") /*application='Web'*/[0m
+  [1m[35m (3.3ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_jobs_on_class_name" ON "solid_queue_jobs" ("class_name") /*application='Web'*/[0m
+  [1m[35m (2.5ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_jobs_on_finished_at" ON "solid_queue_jobs" ("finished_at") /*application='Web'*/[0m
+  [1m[35m (2.9ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_jobs_for_filtering" ON "solid_queue_jobs" ("queue_name", "finished_at") /*application='Web'*/[0m
+  [1m[35m (3.1ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_jobs_for_alerting" ON "solid_queue_jobs" ("scheduled_at", "finished_at") /*application='Web'*/[0m
+  [1m[35m (5.3ms)[0m  [1m[35mCREATE TABLE "solid_queue_blocked_executions" ("id" bigserial primary key, "job_id" bigint NOT NULL, "queue_name" character varying NOT NULL, "priority" integer DEFAULT 0 NOT NULL, "concurrency_key" character varying NOT NULL, "expires_at" timestamp(6) NOT NULL, "created_at" timestamp(6) NOT NULL) /*application='Web'*/[0m
+  [1m[35m (2.7ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_blocked_executions_for_release" ON "solid_queue_blocked_executions" ("concurrency_key", "priority", "job_id") /*application='Web'*/[0m
+  [1m[35m (2.7ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_blocked_executions_for_maintenance" ON "solid_queue_blocked_executions" ("expires_at", "concurrency_key") /*application='Web'*/[0m
+  [1m[35m (2.8ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_solid_queue_blocked_executions_on_job_id" ON "solid_queue_blocked_executions" ("job_id") /*application='Web'*/[0m
+  [1m[35m (3.0ms)[0m  [1m[35mCREATE TABLE "solid_queue_claimed_executions" ("id" bigserial primary key, "job_id" bigint NOT NULL, "process_id" bigint, "created_at" timestamp(6) NOT NULL) /*application='Web'*/[0m
+  [1m[35m (2.5ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_solid_queue_claimed_executions_on_job_id" ON "solid_queue_claimed_executions" ("job_id") /*application='Web'*/[0m
+  [1m[35m (2.7ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_claimed_executions_on_process_id_and_job_id" ON "solid_queue_claimed_executions" ("process_id", "job_id") /*application='Web'*/[0m
+  [1m[35m (5.4ms)[0m  [1m[35mCREATE TABLE "solid_queue_failed_executions" ("id" bigserial primary key, "job_id" bigint NOT NULL, "error" text, "created_at" timestamp(6) NOT NULL) /*application='Web'*/[0m
+  [1m[35m (2.8ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_solid_queue_failed_executions_on_job_id" ON "solid_queue_failed_executions" ("job_id") /*application='Web'*/[0m
+  [1m[35m (5.4ms)[0m  [1m[35mCREATE TABLE "solid_queue_pauses" ("id" bigserial primary key, "queue_name" character varying NOT NULL, "created_at" timestamp(6) NOT NULL) /*application='Web'*/[0m
+  [1m[35m (2.9ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_solid_queue_pauses_on_queue_name" ON "solid_queue_pauses" ("queue_name") /*application='Web'*/[0m
+  [1m[35m (5.5ms)[0m  [1m[35mCREATE TABLE "solid_queue_processes" ("id" bigserial primary key, "kind" character varying NOT NULL, "last_heartbeat_at" timestamp(6) NOT NULL, "supervisor_id" bigint, "pid" integer NOT NULL, "hostname" character varying, "metadata" text, "created_at" timestamp(6) NOT NULL, "name" character varying NOT NULL) /*application='Web'*/[0m
+  [1m[35m (2.8ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_processes_on_last_heartbeat_at" ON "solid_queue_processes" ("last_heartbeat_at") /*application='Web'*/[0m
+  [1m[35m (2.5ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_solid_queue_processes_on_name_and_supervisor_id" ON "solid_queue_processes" ("name", "supervisor_id") /*application='Web'*/[0m
+  [1m[35m (2.6ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_processes_on_supervisor_id" ON "solid_queue_processes" ("supervisor_id") /*application='Web'*/[0m
+  [1m[35m (5.5ms)[0m  [1m[35mCREATE TABLE "solid_queue_ready_executions" ("id" bigserial primary key, "job_id" bigint NOT NULL, "queue_name" character varying NOT NULL, "priority" integer DEFAULT 0 NOT NULL, "created_at" timestamp(6) NOT NULL) /*application='Web'*/[0m
+  [1m[35m (2.5ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_solid_queue_ready_executions_on_job_id" ON "solid_queue_ready_executions" ("job_id") /*application='Web'*/[0m
+  [1m[35m (2.4ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_poll_all" ON "solid_queue_ready_executions" ("priority", "job_id") /*application='Web'*/[0m
+  [1m[35m (2.5ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_poll_by_queue" ON "solid_queue_ready_executions" ("queue_name", "priority", "job_id") /*application='Web'*/[0m
+  [1m[35m (5.3ms)[0m  [1m[35mCREATE TABLE "solid_queue_recurring_executions" ("id" bigserial primary key, "job_id" bigint NOT NULL, "task_key" character varying NOT NULL, "run_at" timestamp(6) NOT NULL, "created_at" timestamp(6) NOT NULL) /*application='Web'*/[0m
+  [1m[35m (2.6ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_solid_queue_recurring_executions_on_job_id" ON "solid_queue_recurring_executions" ("job_id") /*application='Web'*/[0m
+  [1m[35m (2.5ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_solid_queue_recurring_executions_on_task_key_and_run_at" ON "solid_queue_recurring_executions" ("task_key", "run_at") /*application='Web'*/[0m
+  [1m[35m (5.3ms)[0m  [1m[35mCREATE TABLE "solid_queue_recurring_tasks" ("id" bigserial primary key, "key" character varying NOT NULL, "schedule" character varying NOT NULL, "command" character varying(2048), "class_name" character varying, "arguments" text, "queue_name" character varying, "priority" integer DEFAULT 0, "static" boolean DEFAULT TRUE NOT NULL, "description" text, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL) /*application='Web'*/[0m
+  [1m[35m (2.8ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_solid_queue_recurring_tasks_on_key" ON "solid_queue_recurring_tasks" ("key") /*application='Web'*/[0m
+  [1m[35m (2.7ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_recurring_tasks_on_static" ON "solid_queue_recurring_tasks" ("static") /*application='Web'*/[0m
+  [1m[35m (4.9ms)[0m  [1m[35mCREATE TABLE "solid_queue_scheduled_executions" ("id" bigserial primary key, "job_id" bigint NOT NULL, "queue_name" character varying NOT NULL, "priority" integer DEFAULT 0 NOT NULL, "scheduled_at" timestamp(6) NOT NULL, "created_at" timestamp(6) NOT NULL) /*application='Web'*/[0m
+  [1m[35m (2.9ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_solid_queue_scheduled_executions_on_job_id" ON "solid_queue_scheduled_executions" ("job_id") /*application='Web'*/[0m
+  [1m[35m (2.7ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_dispatch_all" ON "solid_queue_scheduled_executions" ("scheduled_at", "priority", "job_id") /*application='Web'*/[0m
+  [1m[35m (5.9ms)[0m  [1m[35mCREATE TABLE "solid_queue_semaphores" ("id" bigserial primary key, "key" character varying NOT NULL, "value" integer DEFAULT 1 NOT NULL, "expires_at" timestamp(6) NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL) /*application='Web'*/[0m
+  [1m[35m (2.6ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_semaphores_on_expires_at" ON "solid_queue_semaphores" ("expires_at") /*application='Web'*/[0m
+  [1m[35m (2.9ms)[0m  [1m[35mCREATE INDEX "index_solid_queue_semaphores_on_key_and_value" ON "solid_queue_semaphores" ("key", "value") /*application='Web'*/[0m
+  [1m[35m (2.8ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_solid_queue_semaphores_on_key" ON "solid_queue_semaphores" ("key") /*application='Web'*/[0m
+  [1m[35m (1.0ms)[0m  [1m[35mALTER TABLE "solid_queue_blocked_executions" ADD CONSTRAINT "fk_rails_4cd34e2228"
+FOREIGN KEY ("job_id")
+  REFERENCES "solid_queue_jobs" ("id")
+ ON DELETE CASCADE /*application='Web'*/[0m
+  [1m[35m (0.8ms)[0m  [1m[35mALTER TABLE "solid_queue_claimed_executions" ADD CONSTRAINT "fk_rails_9cfe4d4944"
+FOREIGN KEY ("job_id")
+  REFERENCES "solid_queue_jobs" ("id")
+ ON DELETE CASCADE /*application='Web'*/[0m
+  [1m[35m (0.7ms)[0m  [1m[35mALTER TABLE "solid_queue_failed_executions" ADD CONSTRAINT "fk_rails_39bbc7a631"
+FOREIGN KEY ("job_id")
+  REFERENCES "solid_queue_jobs" ("id")
+ ON DELETE CASCADE /*application='Web'*/[0m
+  [1m[35m (0.7ms)[0m  [1m[35mALTER TABLE "solid_queue_ready_executions" ADD CONSTRAINT "fk_rails_81fcbd66af"
+FOREIGN KEY ("job_id")
+  REFERENCES "solid_queue_jobs" ("id")
+ ON DELETE CASCADE /*application='Web'*/[0m
+  [1m[35m (0.5ms)[0m  [1m[35mALTER TABLE "solid_queue_recurring_executions" ADD CONSTRAINT "fk_rails_318a5533ed"
+FOREIGN KEY ("job_id")
+  REFERENCES "solid_queue_jobs" ("id")
+ ON DELETE CASCADE /*application='Web'*/[0m
+  [1m[35m (0.5ms)[0m  [1m[35mALTER TABLE "solid_queue_scheduled_executions" ADD CONSTRAINT "fk_rails_c4316f352d"
+FOREIGN KEY ("job_id")
+  REFERENCES "solid_queue_jobs" ("id")
+ ON DELETE CASCADE /*application='Web'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.3ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260301000001') RETURNING "version" /*application='Web'*/[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mCOMMIT /*application='Web'*/[0m
+Migrating to CreateSolidCacheTables (20260301000002)
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mBEGIN /*application='Web'*/[0m
+  [1m[35m (7.7ms)[0m  [1m[35mCREATE TABLE "solid_cache_entries" ("id" bigserial primary key, "key" bytea NOT NULL, "value" bytea NOT NULL, "created_at" timestamp(6) NOT NULL, "key_hash" bigint NOT NULL, "byte_size" integer NOT NULL) /*application='Web'*/[0m
+  [1m[35m (3.1ms)[0m  [1m[35mCREATE INDEX "index_solid_cache_entries_on_byte_size" ON "solid_cache_entries" ("byte_size") /*application='Web'*/[0m
+  [1m[35m (2.9ms)[0m  [1m[35mCREATE INDEX "index_solid_cache_entries_on_key_hash_and_byte_size" ON "solid_cache_entries" ("key_hash", "byte_size") /*application='Web'*/[0m
+  [1m[35m (3.1ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_solid_cache_entries_on_key_hash" ON "solid_cache_entries" ("key_hash") /*application='Web'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.4ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260301000002') RETURNING "version" /*application='Web'*/[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mCOMMIT /*application='Web'*/[0m
+Migrating to CreateSolidCableTables (20260301000003)
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN /*application='Web'*/[0m
+  [1m[35m (7.1ms)[0m  [1m[35mCREATE TABLE "solid_cable_messages" ("id" bigserial primary key, "channel" bytea NOT NULL, "payload" bytea NOT NULL, "created_at" timestamp(6) NOT NULL, "channel_hash" bigint NOT NULL) /*application='Web'*/[0m
+  [1m[35m (2.7ms)[0m  [1m[35mCREATE INDEX "index_solid_cable_messages_on_channel" ON "solid_cable_messages" ("channel") /*application='Web'*/[0m
+  [1m[35m (2.7ms)[0m  [1m[35mCREATE INDEX "index_solid_cable_messages_on_channel_hash" ON "solid_cable_messages" ("channel_hash") /*application='Web'*/[0m
+  [1m[35m (2.8ms)[0m  [1m[35mCREATE INDEX "index_solid_cable_messages_on_created_at" ON "solid_cable_messages" ("created_at") /*application='Web'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.4ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260301000003') RETURNING "version" /*application='Web'*/[0m
+  [1m[36mTRANSACTION (1.3ms)[0m  [1m[35mCOMMIT /*application='Web'*/[0m
+Migrating to AddProgressToTracks (20260301000004)
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mBEGIN /*application='Web'*/[0m
+  [1m[35m (0.4ms)[0m  [1m[35mALTER TABLE "tracks" ADD "progress" integer DEFAULT 0 NOT NULL /*application='Web'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.4ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260301000004') RETURNING "version" /*application='Web'*/[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mCOMMIT /*application='Web'*/[0m
+  [1m[35m (0.4ms)[0m  [1m[34mSELECT pg_advisory_unlock(960222822663551895) /*application='Web'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.3ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Web'*/[0m
+  [1m[35mSQL (0.2ms)[0m  [1m[35mSET search_path TO public /*application='Web'*/[0m
+  [1m[35mSQL (0.3ms)[0m  [1m[35mSET search_path TO "$user", public /*application='Web'*/[0m
+  [1m[35mSQL (0.3ms)[0m  [1m[35mSET search_path TO public /*application='Web'*/[0m
+  [1m[35mSQL (0.2ms)[0m  [1m[35mSET search_path TO "$user", public /*application='Web'*/[0m

@@ -4,8 +4,10 @@ output/*
 !input/.gitkeep
 !models/.gitkeep
 !output/.gitkeep
+web/tmp/*
 
 # Misc
 .DS_Store
-.claude*
-CLAUDE.md
+**.claude*
+**CLAUDE.md
+**.env
