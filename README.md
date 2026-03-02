@@ -77,5 +77,70 @@ make run-interactive gpu=true
 
 This drops you into a bash shell inside the container with the `input`, `output`, and `models` directories mounted. Only the `gpu` option applies to this target.
 
+## Web App
+
+The `web/` directory contains a Rails 8 application that provides a browser UI for uploading tracks, monitoring separation progress in real time, and downloading the individual stems.
+
+### Architecture
+
+- **Rails + Solid Queue** — job processing runs inside the same Puma process (`SOLID_QUEUE_IN_PUMA=true`); no separate worker container needed.
+- **PostgreSQL** — primary database (via the `db` service in docker-compose).
+- **Demucs container** — the web app shells out `docker run` for each track, using the Docker socket mounted into the container.
+- **S3** — stems are uploaded to S3 after separation and served via expiring pre-signed URLs (1-hour TTL). The local output volume is cleaned up after each successful upload.
+
+### Prerequisites
+
+- Docker and Docker Compose
+- An AWS account with an S3 bucket and an IAM user that has `s3:PutObject` and `s3:GetObject` on `arn:aws:s3:::<bucket>/stems/*`
+
+### Configuration
+
+Copy the example and fill in your values:
+
+```bash
+cp .env.example .env   # or edit .env directly
+```
+
+Required variables in `.env`:
+
+| Variable | Description |
+| --- | --- |
+| `POSTGRES_USER` | PostgreSQL username |
+| `POSTGRES_PASSWORD` | PostgreSQL password |
+| `RAILS_MASTER_KEY` | Value from `web/config/master.key` |
+| `AWS_ACCESS_KEY_ID` | IAM access key |
+| `AWS_SECRET_ACCESS_KEY` | IAM secret key |
+| `AWS_REGION` | S3 bucket region (e.g. `us-east-2`) |
+| `AWS_BUCKET` | S3 bucket name |
+
+Optional:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `DEMUCS_GPU` | `false` | Pass `--gpus all` to each `docker run` call |
+
+### Build and run
+
+```bash
+# First time — update Gemfile.lock before building the image
+cd web && bundle install && cd ..
+
+# Build the web image and start all services
+docker compose up --build -d
+```
+
+The app is available at `http://localhost:3000`. On first start the entrypoint runs `db:prepare` automatically (creates tables and runs migrations).
+
+### Rebuilding after gem changes
+
+Any time `web/Gemfile` is edited, regenerate the lock file locally before rebuilding:
+
+```bash
+cd web && bundle install && cd ..
+docker compose up --build -d
+```
+
+This is required because the Docker build runs in frozen-lockfile mode.
+
 ## License
 This repository is released under the MIT license as found in the [LICENSE](LICENSE) file.
