@@ -11,3 +11,4 @@ web/tmp/*
 **.claude*
 **CLAUDE.md
 **.env
+web/config/master.key
