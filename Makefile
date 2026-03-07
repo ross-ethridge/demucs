@@ -62,3 +62,26 @@ run-interactive: init build ## Run the docker container interactively to experim
 .SILENT:
 build: ## Build the docker image which supports running demucs with CPU only or with Nvidia CUDA on a supported GPU
 	docker build -t demucs:latest .
+
+.PHONY:
+.SILENT:
+setup: ## First-time setup: copy env.template to .env and generate SECRET_KEY_BASE
+	@cp -n env.template .env || true
+	@secret=$$(docker run --rm ruby:4.0.1-slim ruby -e "require 'securerandom'; puts SecureRandom.hex(64)"); \
+	 sed -i "s|^SECRET_KEY_BASE=.*|SECRET_KEY_BASE=$$secret|" .env
+	@echo "Done. Edit .env to set POSTGRES_PASSWORD, then run: make up"
+
+.PHONY:
+.SILENT:
+up: build ## Build all images and start the web app
+	docker compose up --build -d
+
+.PHONY:
+.SILENT:
+down: ## Stop the web app
+	docker compose down
+
+.PHONY:
+.SILENT:
+logs: ## Tail web app logs
+	docker compose logs -f web

@@ -135,19 +135,31 @@ The web app passes `--gpus all` to each `docker run` invocation when this is set
 
 ### Build and run
 
-First build the demucs image (required — the web app spawns it for each job):
+First-time setup — copies `env.template` to `.env` and generates a `SECRET_KEY_BASE`:
 
 ```bash
-make build
+make setup
 ```
 
-Then start all services:
+Edit `.env` to set `POSTGRES_PASSWORD` and any other values, then start everything:
 
 ```bash
-docker compose up --build -d
+make up
 ```
 
-The app is available at `http://localhost:3000`. On first start the entrypoint runs `db:prepare` automatically (creates tables and runs migrations).
+`make up` builds the demucs image and starts all Compose services in one step. The app is available at `http://localhost:3000`. On first start the entrypoint runs `db:prepare` automatically (creates tables and runs migrations).
+
+To stop the app:
+
+```bash
+make down
+```
+
+To tail logs:
+
+```bash
+make logs
+```
 
 ### Rebuilding after gem changes
 
