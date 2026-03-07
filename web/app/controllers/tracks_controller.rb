@@ -19,8 +19,9 @@ class TracksController < ApplicationController
     File.binwrite(dest, uploaded.read)
 
     @track = Track.new(
-      name: params[:track][:name].presence || File.basename(filename, File.extname(filename)),
-      filename: filename
+      name:     params[:track][:name].presence || File.basename(filename, File.extname(filename)),
+      filename: filename,
+      model:    Track::MODELS.key?(params[:track][:model]) ? params[:track][:model] : "htdemucs"
     )
 
     if @track.save

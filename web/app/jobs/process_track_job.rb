@@ -118,7 +118,7 @@ class ProcessTrackJob < ApplicationJob
       "-v #{v_output}",
       "-v #{v_models}",
       image,
-      %Q("python3 -m demucs -n htdemucs_ft --out /data/output --shifts 1 --overlap 0.25 -j 1 #{quoted_file}")
+      %Q("python3 -m demucs -n #{track.model} --out /data/output --shifts 1 --overlap 0.25 -j 1 #{quoted_file}")
     ].reject(&:empty?).join(" ")
   end
 end

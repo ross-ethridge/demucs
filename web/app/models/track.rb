@@ -1,9 +1,11 @@
 class Track < ApplicationRecord
   STATUSES = %w[pending processing done failed].freeze
+  MODELS   = { "htdemucs" => "Standard ($1)", "htdemucs_ft" => "High Quality ($3)" }.freeze
 
   validates :name,     presence: true
   validates :filename, presence: true
   validates :status,   inclusion: { in: STATUSES }
+  validates :model,    inclusion: { in: MODELS.keys }
 
   after_update_commit do
     broadcast_replace_to :tracks, partial: "tracks/track", locals: { track: self }
