@@ -31,7 +31,7 @@ docker-run-command = docker run --rm -i \
 	-v $(current-dir)input:/data/input \
 	-v $(current-dir)output:/data/output \
 	-v $(current-dir)models:/data/models \
-	xserrat/facebook-demucs:latest
+	demucs:latest
 
 demucs-command = "python3 -m demucs -n $(model) \
 	--out /data/output \
@@ -61,4 +61,4 @@ run-interactive: init build ## Run the docker container interactively to experim
 .PHONY:
 .SILENT:
 build: ## Build the docker image which supports running demucs with CPU only or with Nvidia CUDA on a supported GPU
-	docker build -t xserrat/facebook-demucs:latest .
+	docker build -t demucs:latest .

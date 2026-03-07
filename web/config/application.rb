@@ -27,6 +27,6 @@ module Web
     config.demucs_input_path  = ENV.fetch("DEMUCS_INPUT_PATH",  Rails.root.join("..", "input").to_s)
     config.demucs_output_path = ENV.fetch("DEMUCS_OUTPUT_PATH", Rails.root.join("..", "output").to_s)
     config.demucs_models_path = ENV.fetch("DEMUCS_MODELS_PATH", Rails.root.join("..", "models").to_s)
-    config.demucs_image       = ENV.fetch("DEMUCS_IMAGE",       "xserrat/facebook-demucs:latest")
+    config.demucs_image       = ENV.fetch("DEMUCS_IMAGE",       "demucs:latest")
   end
 end

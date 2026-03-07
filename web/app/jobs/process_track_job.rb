@@ -12,8 +12,10 @@ class ProcessTrackJob < ApplicationJob
     success = run_with_progress(cmd, track)
 
     if success
-      upload_stems(track)
-      FileUtils.rm_rf(local_output_dir(track))
+      if S3Storage.configured?
+        upload_stems(track)
+        FileUtils.rm_rf(local_output_dir(track))
+      end
       track.update!(status: "done", progress: 100)
     else
       track.update!(status: "failed", progress: track.progress)

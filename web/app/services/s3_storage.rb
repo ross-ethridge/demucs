@@ -1,4 +1,8 @@
 class S3Storage
+  def self.configured?
+    %w[AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION AWS_BUCKET].all? { |k| ENV[k].present? }
+  end
+
   def self.upload(track, stem, local_path)
     bucket.object(key(track, stem)).upload_file(local_path)
   end

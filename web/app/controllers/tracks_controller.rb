@@ -47,8 +47,13 @@ class TracksController < ApplicationController
     unless Track::STEMS.include?(params[:stem])
       return head :bad_request
     end
-    url = S3Storage.presigned_url(@track, params[:stem])
-    redirect_to url, allow_other_host: true
+
+    if S3Storage.configured?
+      redirect_to S3Storage.presigned_url(@track, params[:stem]), allow_other_host: true
+    else
+      path = @track.stem_path(params[:stem])
+      send_file path, filename: "#{@track.stem_name}_#{params[:stem]}.wav", type: "audio/wav", disposition: "attachment"
+    end
   end
 
   private

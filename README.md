@@ -91,7 +91,6 @@ The `web/` directory contains a Rails 8 application that provides a browser UI f
 ### Prerequisites
 
 - Docker and Docker Compose
-- An AWS account with an S3 bucket and an IAM user that has `s3:PutObject` and `s3:GetObject` on `arn:aws:s3:::<bucket>/stems/*`
 
 ### Configuration
 
@@ -101,15 +100,17 @@ Copy `env.template` to `.env` and fill in your values:
 cp env.template .env
 ```
 
-| Variable | Description |
-| --- | --- |
-| `POSTGRES_USER` | PostgreSQL username |
-| `POSTGRES_PASSWORD` | PostgreSQL password |
-| `SECRET_KEY_BASE` | Random secret for Rails — generate with `ruby -e "require 'securerandom'; puts SecureRandom.hex(64)"` |
-| `AWS_ACCESS_KEY_ID` | IAM access key |
-| `AWS_SECRET_ACCESS_KEY` | IAM secret key |
-| `AWS_REGION` | S3 bucket region (e.g. `us-east-2`) |
-| `AWS_BUCKET` | S3 bucket name |
+| Variable | Required | Description |
+| --- | --- | --- |
+| `POSTGRES_USER` | Yes | PostgreSQL username |
+| `POSTGRES_PASSWORD` | Yes | PostgreSQL password |
+| `SECRET_KEY_BASE` | Yes | Random secret for Rails — generate with `docker run --rm ruby:4.0.1-slim ruby -e "require 'securerandom'; puts SecureRandom.hex(64)"` |
+| `AWS_ACCESS_KEY_ID` | No | IAM access key |
+| `AWS_SECRET_ACCESS_KEY` | No | IAM secret key |
+| `AWS_REGION` | No | S3 bucket region (e.g. `us-east-2`) |
+| `AWS_BUCKET` | No | S3 bucket name |
+
+**Storage:** If all four AWS variables are set, completed stems are uploaded to S3 and served via expiring pre-signed URLs. If any are omitted, stems are kept on the local `output` volume and served directly — no AWS account needed.
 
 > **Note:** Do not quote values in `.env`. Docker Compose v2 passes quoted values literally.
 
