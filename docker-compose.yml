@@ -23,6 +23,8 @@ services:
       RAILS_SERVE_STATIC_FILES: "true"
       RAILS_LOG_TO_STDOUT: "true"
       DB_HOST: db
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
       DEMUCS_USE_VOLUMES: "true"
       DEMUCS_INPUT_VOLUME: demucs_input
       DEMUCS_OUTPUT_VOLUME: demucs_output
