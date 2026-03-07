@@ -33,13 +33,13 @@ RUN python3 -m pip install -e . "numpy<2" soundfile --no-cache-dir
 # Patch audio.py: torchaudio 2.x save() encoding param requires dispatcher which is unavailable;
 # use soundfile directly instead (it is already a demucs dependency via requirements.txt)
 RUN python3 -c "content=open('demucs/audio.py').read();old=\"        if as_float:\n            bits_per_sample = 32\n            encoding = 'PCM_F'\n        else:\n            encoding = 'PCM_S'\n        ta.save(str(path), wav, sample_rate=samplerate,\n                encoding=encoding, bits_per_sample=bits_per_sample)\";new=\"        import soundfile as sf\n        subtype='FLOAT' if as_float else 'PCM_%d'%bits_per_sample\n        sf.write(str(path),wav.cpu().numpy().T,samplerate,subtype=subtype)\";assert old in content,'Patch target not found in audio.py';open('demucs/audio.py','w').write(content.replace(old,new));print('audio.py patched')"
-# Download model with retry support — torch.hub's downloader stalls on large files
+# Pre-download one htdemucs_ft checkpoint with retry support — torch.hub's downloader stalls on large files
 RUN mkdir -p /data/models/hub/checkpoints && \
     curl --retry 10 --retry-delay 5 -L \
     -o /data/models/hub/checkpoints/955717e8-8726e21a.th \
     "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/955717e8-8726e21a.th"
-# Run once to ensure demucs works and verify the build is correct
-RUN python3 -m demucs -d cpu test.mp3
+# Run with htdemucs_ft to download remaining model checkpoints and verify the build is correct
+RUN python3 -m demucs -d cpu -n htdemucs_ft test.mp3
 # Cleanup output - we just used this to download the model
 RUN rm -r separated
 

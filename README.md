@@ -25,6 +25,9 @@ This repository wraps Demucs in a Docker container so it can be run without manu
 
 1. Clone this repository:
 ```bash
+# HTTPS
+git clone https://github.com/ross-ethridge/demucs.git
+# or SSH
 git clone git@github.com:ross-ethridge/demucs.git
 cd demucs
 ```
@@ -32,7 +35,7 @@ cd demucs
 ```bash
 make build
 ```
-The build clones the Demucs source, installs PyTorch with CUDA 11.8 support, patches torchaudio for compatibility, and pre-downloads the default `htdemucs` model (~80 MB). **Expect this to take 10–20 minutes** on the first run — it needs to download PyTorch, torchaudio, and all other Python dependencies before the model itself.
+The build clones the Demucs source, installs PyTorch with CUDA 11.8 support, patches torchaudio for compatibility, and pre-downloads all `htdemucs_ft` model checkpoints. **Expect this to take 10–20 minutes** on the first run — it needs to download PyTorch, torchaudio, all other Python dependencies, and the model files.
 
 3. Copy the track you want to split into the `input` folder (e.g., `input/mysong.mp3`).
 4. Run `demucs`:
@@ -86,7 +89,7 @@ The `web/` directory contains a Rails 8 application that provides a browser UI f
 - **Rails + Solid Queue** — job processing runs inside the same Puma process (`SOLID_QUEUE_IN_PUMA=true`); no separate worker container needed.
 - **PostgreSQL** — primary database (via the `db` service in docker-compose).
 - **Demucs container** — the web app shells out `docker run` for each track, using the Docker socket mounted into the container.
-- **S3** — stems are uploaded to S3 after separation and served via expiring pre-signed URLs (1-hour TTL). The local output volume is cleaned up after each successful upload.
+- **Storage** — if AWS credentials are configured, stems are uploaded to S3 and served via expiring pre-signed URLs. Otherwise they are kept on the local `output` volume and served directly.
 
 ### Prerequisites
 
@@ -131,6 +134,14 @@ By default the web app runs demucs on the CPU, which is slow. To enable GPU acce
 The web app passes `--gpus all` to each `docker run` invocation when this is set.
 
 ### Build and run
+
+First build the demucs image (required — the web app spawns it for each job):
+
+```bash
+make build
+```
+
+Then start all services:
 
 ```bash
 docker compose up --build -d
