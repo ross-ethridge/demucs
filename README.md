@@ -114,6 +114,22 @@ cp env.template .env
 
 > **Note:** Do not quote values in `.env`. Docker Compose v2 passes quoted values literally.
 
+### GPU acceleration (optional)
+
+By default the web app runs demucs on the CPU, which is slow. To enable GPU acceleration:
+
+1. Install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) on your host.
+2. Build the demucs image (if you haven't already):
+   ```bash
+   make build
+   ```
+3. Add the following to your `.env`:
+   ```
+   DEMUCS_GPU=true
+   ```
+
+The web app passes `--gpus all` to each `docker run` invocation when this is set.
+
 ### Build and run
 
 ```bash
