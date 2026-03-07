@@ -117,10 +117,6 @@ cp env.template .env
 ### Build and run
 
 ```bash
-# First time — update Gemfile.lock before building the image
-cd web && bundle install && cd ..
-
-# Build the web image and start all services
 docker compose up --build -d
 ```
 
@@ -128,14 +124,23 @@ The app is available at `http://localhost:3000`. On first start the entrypoint r
 
 ### Rebuilding after gem changes
 
-Any time `web/Gemfile` is edited, regenerate the lock file locally before rebuilding:
+Any time `web/Gemfile` is edited, update `Gemfile.lock` before rebuilding. If you have Ruby installed locally:
 
 ```bash
 cd web && bundle install && cd ..
-docker compose up --build -d
 ```
 
-This is required because the Docker build runs in frozen-lockfile mode.
+Otherwise, use Docker to regenerate it without a local Ruby install:
+
+```bash
+docker run --rm -v "$PWD/web":/app -w /app ruby:4.0.1-slim bundle install
+```
+
+Then rebuild as normal:
+
+```bash
+docker compose up --build -d
+```
 
 ## License
 This repository is released under the MIT license as found in the [LICENSE](LICENSE) file.
