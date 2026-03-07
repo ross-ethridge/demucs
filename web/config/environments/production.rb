@@ -89,8 +89,11 @@ Rails.application.configure do
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 
   # S3 is required in production — fail loudly at boot rather than silently serving local files
+  # Skip during asset precompilation (SECRET_KEY_BASE_DUMMY indicates a build-time invocation)
   config.after_initialize do
-    missing = %w[AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION AWS_BUCKET].reject { |k| ENV[k].present? }
-    raise "Missing required S3 environment variables: #{missing.join(", ")}" if missing.any?
+    unless ENV["SECRET_KEY_BASE_DUMMY"].present?
+      missing = %w[AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION AWS_BUCKET].reject { |k| ENV[k].present? }
+      raise "Missing required S3 environment variables: #{missing.join(", ")}" if missing.any?
+    end
   end
 end
