@@ -12,3 +12,5 @@ web/tmp/*
 **CLAUDE.md
 **.env
 web/config/master.key
+web/config/credentials.yml.enc
+

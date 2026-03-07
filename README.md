@@ -95,29 +95,22 @@ The `web/` directory contains a Rails 8 application that provides a browser UI f
 
 ### Configuration
 
-Copy the example and fill in your values:
+Copy `env.template` to `.env` and fill in your values:
 
 ```bash
-cp .env.example .env   # or edit .env directly
+cp env.template .env
 ```
-
-Required variables in `.env`:
 
 | Variable | Description |
 | --- | --- |
 | `POSTGRES_USER` | PostgreSQL username |
 | `POSTGRES_PASSWORD` | PostgreSQL password |
-| `RAILS_MASTER_KEY` | Value from `web/config/master.key` |
 | `AWS_ACCESS_KEY_ID` | IAM access key |
 | `AWS_SECRET_ACCESS_KEY` | IAM secret key |
 | `AWS_REGION` | S3 bucket region (e.g. `us-east-2`) |
 | `AWS_BUCKET` | S3 bucket name |
 
-Optional:
-
-| Variable | Default | Description |
-| --- | --- | --- |
-| `DEMUCS_GPU` | `false` | Pass `--gpus all` to each `docker run` call |
+> **Note:** Do not quote values in `.env`. Docker Compose v2 passes quoted values literally.
 
 ### Build and run
 
