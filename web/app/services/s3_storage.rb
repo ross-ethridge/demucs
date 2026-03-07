@@ -11,11 +11,17 @@ class S3Storage
     bucket.object(key(track, stem)).presigned_url(:get, expires_in: expires_in.to_i)
   end
 
+  def self.delete(track)
+    Track::STEMS.each do |stem|
+      bucket.object(key(track, stem)).delete
+    end
+  end
+
   class << self
     private
 
     def key(track, stem)
-      "stems/#{track.stem_name}/#{stem}.wav"
+      "stems/#{track.stem_name}/#{track.stem_name}_#{stem}.wav"
     end
 
     def bucket
