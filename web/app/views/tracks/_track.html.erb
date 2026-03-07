@@ -33,12 +33,7 @@
        when "failed"     then "bg-red-900/50 text-red-400 border-red-800"
        end %>
     <span class="flex-shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border <%= badge_classes %>">
-      <%= case track.status
-          when "pending"    then "⏳ Pending"
-          when "processing" then "⚙ Processing"
-          when "done"       then "✓ Done"
-          when "failed"     then "✕ Failed"
-          end %>
+      <%= status_badge_content(track.status) %>
     </span>
 
     <%# Age %>
