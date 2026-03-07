@@ -105,6 +105,7 @@ cp env.template .env
 | --- | --- |
 | `POSTGRES_USER` | PostgreSQL username |
 | `POSTGRES_PASSWORD` | PostgreSQL password |
+| `SECRET_KEY_BASE` | Random secret for Rails — generate with `ruby -e "require 'securerandom'; puts SecureRandom.hex(64)"` |
 | `AWS_ACCESS_KEY_ID` | IAM access key |
 | `AWS_SECRET_ACCESS_KEY` | IAM secret key |
 | `AWS_REGION` | S3 bucket region (e.g. `us-east-2`) |
