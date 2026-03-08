@@ -13,13 +13,14 @@ class TracksController < ApplicationController
     uploaded = params[:track][:file]
     return redirect_to new_track_path, alert: "Please select a file." unless uploaded
 
-    filename = uploaded.original_filename
+    original = uploaded.original_filename
+    filename = "#{SecureRandom.hex(8)}_#{original}"
     dest = File.join(Rails.application.config.demucs_input_path, filename)
     FileUtils.mkdir_p(Rails.application.config.demucs_input_path)
     File.binwrite(dest, uploaded.read)
 
     @track = Track.new(
-      name:     params[:track][:name].presence || File.basename(filename, File.extname(filename)),
+      name:     params[:track][:name].presence || File.basename(original, File.extname(original)),
       filename: filename,
       model:    Track::MODELS.key?(params[:track][:model]) ? params[:track][:model] : "htdemucs"
     )
