@@ -11,6 +11,7 @@ web/tmp/*
 **.claude*
 **CLAUDE.md
 **.env
+docker-compose.override.yml
 web/config/master.key
 web/config/credentials.yml.enc
 

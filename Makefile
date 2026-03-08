@@ -74,7 +74,7 @@ setup: ## First-time setup: copy env.template to .env and generate SECRET_KEY_BA
 .PHONY:
 .SILENT:
 up: build ## Build all images and start the web app
-	docker compose up --build -d
+	docker compose up --build -d --scale worker=3
 
 .PHONY:
 .SILENT:
@@ -83,5 +83,10 @@ down: ## Stop the web app
 
 .PHONY:
 .SILENT:
-logs: ## Tail web app logs
-	docker compose logs -f web
+logs: ## Tail web and worker logs
+	docker compose logs -f web worker
+
+.PHONY:
+.SILENT:
+logs-worker: ## Tail worker logs only
+	docker compose logs -f worker
