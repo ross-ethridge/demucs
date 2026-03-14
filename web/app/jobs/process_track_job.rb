@@ -79,7 +79,7 @@ class ProcessTrackJob < ApplicationJob
 
   def local_output_dir(track)
     File.join(Rails.application.config.demucs_output_path,
-              "htdemucs_ft", track.stem_name)
+              track.model, track.stem_name)
   end
 
   def build_docker_cmd(track)

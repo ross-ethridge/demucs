@@ -22,6 +22,6 @@ class Track < ApplicationRecord
 
   def stem_path(stem)
     output_base = Rails.application.config.demucs_output_path
-    File.join(output_base, "htdemucs_ft", stem_name, "#{stem}.wav")
+    File.join(output_base, model, stem_name, "#{stem}.wav")
   end
 end
