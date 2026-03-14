@@ -2,7 +2,7 @@ class TracksController < ApplicationController
   before_action :set_track, only: [:show, :destroy, :download_stem]
 
   def index
-    @tracks = Track.order(created_at: :desc)
+    @tracks = current_user.tracks.order(created_at: :desc)
   end
 
   def new
@@ -20,7 +20,8 @@ class TracksController < ApplicationController
     @track = Track.new(
       name:     params[:track][:name].presence || File.basename(original, File.extname(original)),
       filename: filename,
-      model:    Track::MODELS.key?(params[:track][:model]) ? params[:track][:model] : "htdemucs"
+      model:    Track::MODELS.key?(params[:track][:model]) ? params[:track][:model] : "htdemucs",
+      user:     current_user
     )
     @track.audio_file.attach(blob)
 
@@ -60,6 +61,6 @@ class TracksController < ApplicationController
   private
 
   def set_track
-    @track = Track.find(params[:id])
+    @track = current_user.tracks.find(params[:id])
   end
 end

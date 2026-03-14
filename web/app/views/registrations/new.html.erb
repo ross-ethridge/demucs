@@ -1,0 +1,52 @@
+<% content_for :title, "demucs:r – Create Account" %>
+
+<div class="min-h-[70vh] flex items-center justify-center">
+  <div class="w-full max-w-md">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl">
+      <div class="flex items-center gap-3 mb-8">
+        <svg class="w-6 h-6 text-violet-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="13" r="9"/>
+          <circle cx="11" cy="13" r="3"/>
+          <circle cx="11" cy="13" r="0.5" fill="currentColor" stroke="none"/>
+          <line x1="14" y1="10" x2="21" y2="3" stroke-width="2.5"/>
+          <line x1="21" y1="3" x2="23" y2="5" stroke-width="2.5"/>
+        </svg>
+        <h1 class="text-xl font-semibold text-white">Create your account</h1>
+      </div>
+
+      <%= form_with model: @user, url: registration_path, class: "space-y-5" do |f| %>
+        <% if @user.errors.any? %>
+          <div class="text-sm text-red-400 bg-red-900/30 border border-red-800 rounded-lg px-3 py-2">
+            <%= @user.errors.full_messages.to_sentence %>
+          </div>
+        <% end %>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-1.5">Email address</label>
+          <%= f.email_field :email_address, required: true, autofocus: true, autocomplete: "email",
+              placeholder: "you@example.com",
+              class: "block w-full bg-slate-950 border border-slate-700 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:outline-none text-white placeholder-slate-500 rounded-lg px-3 py-2.5 text-sm transition-colors" %>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-1.5">Password</label>
+          <%= f.password_field :password, required: true, autocomplete: "new-password",
+              placeholder: "••••••••", minlength: 12,
+              class: "block w-full bg-slate-950 border border-slate-700 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:outline-none text-white placeholder-slate-500 rounded-lg px-3 py-2.5 text-sm transition-colors" %>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-1.5">Confirm password</label>
+          <%= f.password_field :password_confirmation, required: true, autocomplete: "new-password",
+              placeholder: "••••••••",
+              class: "block w-full bg-slate-950 border border-slate-700 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:outline-none text-white placeholder-slate-500 rounded-lg px-3 py-2.5 text-sm transition-colors" %>
+        </div>
+
+        <div class="flex items-center justify-between pt-1">
+          <%= f.submit "Create account", class: "bg-violet-600 hover:bg-violet-500 text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-colors cursor-pointer" %>
+          <%= link_to "Sign in instead", new_session_path, class: "text-slate-400 hover:text-violet-400 text-sm transition-colors" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
