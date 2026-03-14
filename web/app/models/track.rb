@@ -4,8 +4,8 @@ class Track < ApplicationRecord
   STATUSES = %w[pending processing done failed].freeze
   MODELS   = { "htdemucs" => "Standard · $1.00", "htdemucs_ft" => "High Quality · $2.00" }.freeze
   STRIPE_PRICES = {
-    "htdemucs"    => ENV.fetch("STRIPE_PRICE_STANDARD"),
-    "htdemucs_ft" => ENV.fetch("STRIPE_PRICE_FINE_TUNED")
+    "htdemucs"    => ENV["STRIPE_PRICE_STANDARD"],
+    "htdemucs_ft" => ENV["STRIPE_PRICE_FINE_TUNED"]
   }.freeze
 
   validates :name,     presence: true
