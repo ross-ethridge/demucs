@@ -37,12 +37,12 @@ class TracksController < ApplicationController
   end
 
   def destroy
+    @track.destroy
     input_file = File.join(Rails.application.config.demucs_input_path, @track.filename)
-    output_dir = File.join(Rails.application.config.demucs_output_path, "htdemucs", @track.stem_name)
+    output_dir = File.join(Rails.application.config.demucs_output_path, @track.model, @track.stem_name)
     FileUtils.rm_f(input_file)
     FileUtils.rm_rf(output_dir)
     S3Storage.delete(@track) if S3Storage.configured?
-    @track.destroy
     redirect_to tracks_path, notice: "Track deleted."
   end
 
