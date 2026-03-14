@@ -39,7 +39,7 @@ services:
       HTTP_READ_TIMEOUT: "300"
       HTTP_WRITE_TIMEOUT: "300"
       STORAGE_PATH: /data/thruster
-      SSL_DOMAIN: ${SSL_DOMAIN}
+      TLS_DOMAIN: ${TLS_DOMAIN}
     depends_on:
       - db
     volumes:
