@@ -13,7 +13,8 @@ services:
     build: ./web
     restart: always
     ports:
-      - "3000:80"
+      - "80:80"
+      - "443:443"
     env_file:
       - .env
     environment:
@@ -37,7 +38,8 @@ services:
       AWS_BUCKET:            ${AWS_BUCKET}
       HTTP_READ_TIMEOUT: "300"
       HTTP_WRITE_TIMEOUT: "300"
-      STORAGE_PATH: /tmp/thruster
+      STORAGE_PATH: /data/thruster
+      SSL_DOMAIN: ${SSL_DOMAIN}
     depends_on:
       - db
     volumes:
@@ -45,6 +47,7 @@ services:
       - input:/data/input
       - output:/data/output
       - models:/data/models
+      - thruster:/data/thruster
 
   worker:
     build: ./web
@@ -85,3 +88,4 @@ volumes:
     name: demucs_output
   models:
     name: demucs_models
+  thruster:
