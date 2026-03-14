@@ -31,7 +31,7 @@ class TracksController < ApplicationController
         model:          model,
         user_id:        current_user.id
       },
-      success_url: payments_success_url(session_id: "{CHECKOUT_SESSION_ID}"),
+      success_url: "#{payments_success_url}?session_id={CHECKOUT_SESSION_ID}",
       cancel_url:  payments_cancel_url
     )
 
