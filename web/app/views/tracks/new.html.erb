@@ -43,8 +43,8 @@
             <label class="relative flex items-center gap-3 bg-slate-800 border border-slate-700 rounded-lg p-3 cursor-pointer has-[:checked]:border-violet-500 has-[:checked]:bg-violet-900/20 transition-colors">
               <%= f.radio_button :model, value, class: "sr-only" %>
               <div class="flex-1 min-w-0">
-                <div class="text-sm font-medium text-white"><%= label.split(" ").first %></div>
-                <div class="text-xs text-slate-500"><%= label.split(" ").last(2).join(" ") %></div>
+                <div class="text-sm font-medium text-white"><%= label.split(" · ").first %></div>
+                <div class="text-xs text-slate-500"><%= label.split(" · ").last %></div>
               </div>
             </label>
           <% end %>
