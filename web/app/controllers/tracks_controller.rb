@@ -43,7 +43,10 @@ class TracksController < ApplicationController
     FileUtils.rm_f(input_file)
     FileUtils.rm_rf(output_dir)
     S3Storage.delete(@track) if S3Storage.configured?
-    redirect_to tracks_path, notice: "Track deleted."
+    rescue => e
+      Rails.logger.error("[destroy] Cleanup failed for track #{@track.id}: #{e.message}")
+    ensure
+      redirect_to tracks_path, notice: "Track deleted."
   end
 
   def download_stem
