@@ -7,12 +7,10 @@ class ProcessTrackJob < ApplicationJob
     track = Track.find(track_id)
     track.update!(status: "processing", progress: 0)
 
-    if S3Storage.configured?
-      dest = File.join(Rails.application.config.demucs_input_path, track.filename)
-      FileUtils.mkdir_p(Rails.application.config.demucs_input_path)
-      Rails.logger.info("[ProcessTrackJob] Downloading input from S3: #{track.filename}")
-      S3Storage.download_input(track.filename, dest)
-    end
+    dest = File.join(Rails.application.config.demucs_input_path, track.filename)
+    FileUtils.mkdir_p(Rails.application.config.demucs_input_path)
+    Rails.logger.info("[ProcessTrackJob] Downloading input: #{track.filename}")
+    File.open(dest, "wb") { |f| track.audio_file.download { |chunk| f.write(chunk) } }
 
     cmd = build_docker_cmd(track)
     Rails.logger.info("[ProcessTrackJob] Running: #{cmd}")
@@ -22,9 +20,9 @@ class ProcessTrackJob < ApplicationJob
       if S3Storage.configured?
         upload_stems(track)
         FileUtils.rm_rf(local_output_dir(track))
-        FileUtils.rm_f(File.join(Rails.application.config.demucs_input_path, track.filename))
-        S3Storage.delete_input(track.filename)
       end
+      track.audio_file.purge
+      FileUtils.rm_f(dest)
       track.update!(status: "done", progress: 100)
     else
       track.update!(status: "failed", progress: track.progress)
@@ -39,8 +37,6 @@ class ProcessTrackJob < ApplicationJob
   private
 
   def run_with_progress(cmd, track)
-    # htdemucs_ft is a bag of 4 models — each runs 0→100% in sequence.
-    # We map each model's progress onto a 0–100% overall scale.
     exit_status = nil
     run_index  = 0
     last_pct   = -1
@@ -50,9 +46,7 @@ class ProcessTrackJob < ApplicationJob
       stdin.close
       loop do
         begin
-          # readpartial returns as soon as ANY bytes arrive, not waiting for \n
           buf += output.readpartial(2048)
-          # Process everything up to each \r or \n
           while (idx = buf.index(/[\r\n]/))
             segment = buf[0, idx].strip
             buf     = buf[idx + 1..]
@@ -60,7 +54,6 @@ class ProcessTrackJob < ApplicationJob
 
             if (match = segment.match(/(\d+)%\|/))
               per_model_pct = match[1].to_i
-              # Detect wrap-around to a new model run (100 → 0)
               run_index += 1 if per_model_pct < last_pct
               last_pct = per_model_pct
               overall  = ((run_index * 100 + per_model_pct) / 4.0).round

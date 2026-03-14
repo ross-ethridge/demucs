@@ -4,9 +4,6 @@ Rails.application.routes.draw do
   root "tracks#index"
 
   resources :tracks, only: [:index, :new, :create, :show, :destroy] do
-    collection do
-      get :presign
-    end
     member do
       get :download_stem
     end

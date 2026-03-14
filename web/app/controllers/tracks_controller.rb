@@ -6,57 +6,29 @@ class TracksController < ApplicationController
   end
 
   def new
-    @track = Track.new
-  end
-
-  def presign
-    original = params[:filename].to_s.gsub(/[^\w.\-]/, "_")
-    filename = "#{SecureRandom.hex(8)}_#{original}"
-    key      = S3Storage.input_key(filename)
-    url      = S3Storage.presigned_upload_url(key)
-    render json: { url: url, filename: filename }
+    @track = Track.new(model: "htdemucs")
   end
 
   def create
-    if params[:filename].present?
-      # Direct S3 upload path — file is already in S3, just save metadata
-      original = params[:filename].to_s
-      @track = Track.new(
-        name:     params[:name].presence || File.basename(original, File.extname(original)),
-        filename: original,
-        model:    Track::MODELS.key?(params[:model]) ? params[:model] : "htdemucs"
-      )
-    else
-      # Fallback: traditional multipart upload (local dev without S3)
-      uploaded = params[:track][:file]
-      return redirect_to new_track_path, alert: "Please select a file." unless uploaded
+    uploaded = params[:track][:audio_file]
+    return redirect_to new_track_path, alert: "Please select a file." unless uploaded
 
-      original = uploaded.original_filename
-      filename = "#{SecureRandom.hex(8)}_#{original}"
-      dest = File.join(Rails.application.config.demucs_input_path, filename)
-      FileUtils.mkdir_p(Rails.application.config.demucs_input_path)
-      File.binwrite(dest, uploaded.read)
+    blob     = ActiveStorage::Blob.find_signed!(uploaded)
+    original = blob.filename.sanitized
+    filename = "#{SecureRandom.hex(8)}_#{original}"
 
-      @track = Track.new(
-        name:     params[:track][:name].presence || File.basename(original, File.extname(original)),
-        filename: filename,
-        model:    Track::MODELS.key?(params[:track][:model]) ? params[:track][:model] : "htdemucs"
-      )
-    end
+    @track = Track.new(
+      name:     params[:track][:name].presence || File.basename(original, File.extname(original)),
+      filename: filename,
+      model:    Track::MODELS.key?(params[:track][:model]) ? params[:track][:model] : "htdemucs"
+    )
+    @track.audio_file.attach(blob)
 
     if @track.save
       ProcessTrackJob.perform_later(@track.id)
-      if request.format.json?
-        render json: { redirect: track_url(@track) }, status: :created
-      else
-        redirect_to @track, notice: "Track uploaded and queued for processing."
-      end
+      redirect_to @track, notice: "Track uploaded and queued for processing."
     else
-      if request.format.json?
-        render json: { errors: @track.errors.full_messages }, status: :unprocessable_entity
-      else
-        redirect_to new_track_path, alert: @track.errors.full_messages.to_sentence
-      end
+      redirect_to new_track_path, alert: @track.errors.full_messages.to_sentence
     end
   end
 
@@ -65,10 +37,6 @@ class TracksController < ApplicationController
 
   def destroy
     @track.destroy
-    input_file = File.join(Rails.application.config.demucs_input_path, @track.filename)
-    output_dir = File.join(Rails.application.config.demucs_output_path, @track.model, @track.stem_name)
-    FileUtils.rm_f(input_file)
-    FileUtils.rm_rf(output_dir)
     S3Storage.delete(@track) if S3Storage.configured?
     rescue => e
       Rails.logger.error("[destroy] Cleanup failed for track #{@track.id}: #{e.message}")

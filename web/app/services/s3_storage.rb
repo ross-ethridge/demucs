@@ -3,22 +3,6 @@ class S3Storage
     %w[AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION AWS_BUCKET].all? { |k| ENV[k].present? }
   end
 
-  def self.presigned_upload_url(input_key, expires_in: 15.minutes)
-    bucket.object(input_key).presigned_url(:put, expires_in: expires_in.to_i)
-  end
-
-  def self.input_key(filename)
-    "inputs/#{filename}"
-  end
-
-  def self.download_input(filename, dest_path)
-    bucket.object(input_key(filename)).get(response_target: dest_path)
-  end
-
-  def self.delete_input(filename)
-    bucket.object(input_key(filename)).delete
-  end
-
   def self.upload(track, stem, local_path)
     bucket.object(key(track, stem)).upload_file(local_path)
   end
