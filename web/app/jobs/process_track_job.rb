@@ -106,6 +106,8 @@ class ProcessTrackJob < ApplicationJob
     end
 
     gpu_flag       = gpu ? "--gpus all" : ""
+    threads        = ENV.fetch("DEMUCS_THREADS", "4")
+    shifts         = ENV.fetch("DEMUCS_SHIFTS", "1")
     container_name = "demucs-#{track.id}"
     quoted_file    = Shellwords.escape("/data/input/#{track.filename}")
 
@@ -114,11 +116,12 @@ class ProcessTrackJob < ApplicationJob
       gpu_flag,
       "--name=#{container_name}",
       "-e PYTHONUNBUFFERED=1",
+      "-e OMP_NUM_THREADS=#{threads}",
       "-v #{v_input}",
       "-v #{v_output}",
       "-v #{v_models}",
       image,
-      %Q("python3 -m demucs -n #{track.model} --out /data/output --shifts 1 --overlap 0.25 -j 1 #{quoted_file}")
+      %Q("python3 -m demucs -n #{track.model} --out /data/output --shifts #{shifts} --overlap 0.25 -j 1 #{quoted_file}")
     ].reject(&:empty?).join(" ")
   end
 end
