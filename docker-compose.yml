@@ -35,6 +35,8 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION:            ${AWS_REGION}
       AWS_BUCKET:            ${AWS_BUCKET}
+      HTTP_READ_TIMEOUT: "300"
+      HTTP_WRITE_TIMEOUT: "300"
     depends_on:
       - db
     volumes:
