@@ -9,27 +9,54 @@ class TracksController < ApplicationController
     @track = Track.new
   end
 
-  def create
-    uploaded = params[:track][:file]
-    return redirect_to new_track_path, alert: "Please select a file." unless uploaded
-
-    original = uploaded.original_filename
+  def presign
+    original = params[:filename].to_s.gsub(/[^\w.\-]/, "_")
     filename = "#{SecureRandom.hex(8)}_#{original}"
-    dest = File.join(Rails.application.config.demucs_input_path, filename)
-    FileUtils.mkdir_p(Rails.application.config.demucs_input_path)
-    File.binwrite(dest, uploaded.read)
+    key      = S3Storage.input_key(filename)
+    url      = S3Storage.presigned_upload_url(key)
+    render json: { url: url, filename: filename }
+  end
 
-    @track = Track.new(
-      name:     params[:track][:name].presence || File.basename(original, File.extname(original)),
-      filename: filename,
-      model:    Track::MODELS.key?(params[:track][:model]) ? params[:track][:model] : "htdemucs"
-    )
+  def create
+    if params[:filename].present?
+      # Direct S3 upload path — file is already in S3, just save metadata
+      original = params[:filename].to_s
+      @track = Track.new(
+        name:     params[:name].presence || File.basename(original, File.extname(original)),
+        filename: original,
+        model:    Track::MODELS.key?(params[:model]) ? params[:model] : "htdemucs"
+      )
+    else
+      # Fallback: traditional multipart upload (local dev without S3)
+      uploaded = params[:track][:file]
+      return redirect_to new_track_path, alert: "Please select a file." unless uploaded
+
+      original = uploaded.original_filename
+      filename = "#{SecureRandom.hex(8)}_#{original}"
+      dest = File.join(Rails.application.config.demucs_input_path, filename)
+      FileUtils.mkdir_p(Rails.application.config.demucs_input_path)
+      File.binwrite(dest, uploaded.read)
+
+      @track = Track.new(
+        name:     params[:track][:name].presence || File.basename(original, File.extname(original)),
+        filename: filename,
+        model:    Track::MODELS.key?(params[:track][:model]) ? params[:track][:model] : "htdemucs"
+      )
+    end
 
     if @track.save
       ProcessTrackJob.perform_later(@track.id)
-      redirect_to @track, notice: "Track uploaded and queued for processing."
+      if request.format.json?
+        render json: { redirect: track_url(@track) }, status: :created
+      else
+        redirect_to @track, notice: "Track uploaded and queued for processing."
+      end
     else
-      redirect_to new_track_path, alert: @track.errors.full_messages.to_sentence
+      if request.format.json?
+        render json: { errors: @track.errors.full_messages }, status: :unprocessable_entity
+      else
+        redirect_to new_track_path, alert: @track.errors.full_messages.to_sentence
+      end
     end
   end
 

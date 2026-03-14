@@ -7,17 +7,16 @@
   </div>
 
   <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-    <%= form_with url: tracks_path, multipart: true do |f| %>
-
+    <div id="upload-form">
       <div class="mb-5">
         <label class="block text-sm font-medium text-slate-300 mb-1.5">Session Name <span class="text-slate-600 font-normal">(optional)</span></label>
-        <input type="text" name="track[name]" placeholder="Leave blank to use filename"
+        <input id="track-name" type="text" placeholder="Leave blank to use filename"
                class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition">
       </div>
 
       <div class="mb-6">
         <label class="block text-sm font-medium text-slate-300 mb-1.5">Audio File</label>
-        <label class="group flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-700 hover:border-violet-500 rounded-xl cursor-pointer bg-slate-800/50 hover:bg-slate-800 transition-colors">
+        <label id="file-drop" class="group flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-700 hover:border-violet-500 rounded-xl cursor-pointer bg-slate-800/50 hover:bg-slate-800 transition-colors">
           <div class="flex flex-col items-center gap-2 pointer-events-none">
             <svg class="w-8 h-8 text-slate-600 group-hover:text-violet-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
@@ -25,7 +24,7 @@
             <span class="text-sm text-slate-500 group-hover:text-slate-400 transition-colors">Click to browse or drag and drop</span>
             <span class="text-xs text-slate-700">WAV · MP3 · FLAC · OGG</span>
           </div>
-          <input type="file" name="track[file]" accept=".wav,.mp3,.flac,.ogg" class="sr-only">
+          <input id="file-input" type="file" accept=".wav,.mp3,.flac,.ogg" class="sr-only">
         </label>
         <p id="file-name" class="text-xs text-slate-500 mt-1.5 hidden"></p>
       </div>
@@ -35,7 +34,7 @@
         <div class="grid grid-cols-2 gap-3">
           <% Track::MODELS.each do |value, label| %>
             <label class="relative flex items-center gap-3 bg-slate-800 border border-slate-700 rounded-lg p-3 cursor-pointer has-[:checked]:border-violet-500 has-[:checked]:bg-violet-900/20 transition-colors">
-              <input type="radio" name="track[model]" value="<%= value %>" <%= "checked" if value == "htdemucs" %> class="sr-only">
+              <input type="radio" name="track_model" value="<%= value %>" <%= "checked" if value == "htdemucs" %> class="sr-only">
               <div class="flex-1 min-w-0">
                 <div class="text-sm font-medium text-white"><%= label.split(" ").first %></div>
                 <div class="text-xs text-slate-500"><%= label.split(" ").last(2).join(" ") %></div>
@@ -45,21 +44,127 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        <%= f.submit "Run It", class: "flex-1 bg-violet-600 hover:bg-violet-500 text-white font-medium py-2.5 rounded-lg transition-colors cursor-pointer text-sm" %>
-        <%= link_to "Cancel", tracks_path, class: "text-slate-500 hover:text-slate-300 text-sm transition-colors" %>
+      <div id="progress-section" class="hidden mb-4">
+        <div class="flex justify-between text-xs text-slate-400 mb-1">
+          <span id="progress-label">Uploading…</span>
+          <span id="progress-pct">0%</span>
+        </div>
+        <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+          <div id="progress-bar" class="bg-violet-500 h-1.5 rounded-full transition-all duration-200" style="width: 0%"></div>
+        </div>
       </div>
 
-    <% end %>
+      <div id="error-banner" class="hidden mb-4 text-sm text-red-400 bg-red-900/30 border border-red-800 rounded-lg px-3 py-2"></div>
+
+      <div class="flex items-center gap-3">
+        <button id="submit-btn" class="flex-1 bg-violet-600 hover:bg-violet-500 text-white font-medium py-2.5 rounded-lg transition-colors cursor-pointer text-sm">
+          Run It
+        </button>
+        <%= link_to "Cancel", tracks_path, class: "text-slate-500 hover:text-slate-300 text-sm transition-colors" %>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-  document.querySelector('input[type="file"]').addEventListener('change', function() {
-    const label = document.getElementById('file-name');
+(function() {
+  const fileInput   = document.getElementById('file-input');
+  const fileNameEl  = document.getElementById('file-name');
+  const submitBtn   = document.getElementById('submit-btn');
+  const progressSec = document.getElementById('progress-section');
+  const progressBar = document.getElementById('progress-bar');
+  const progressPct = document.getElementById('progress-pct');
+  const progressLbl = document.getElementById('progress-label');
+  const errorBanner = document.getElementById('error-banner');
+  const csrfToken   = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  fileInput.addEventListener('change', function() {
     if (this.files.length > 0) {
-      label.textContent = this.files[0].name;
-      label.classList.remove('hidden');
+      fileNameEl.textContent = this.files[0].name;
+      fileNameEl.classList.remove('hidden');
     }
   });
+
+  function showError(msg) {
+    errorBanner.textContent = msg;
+    errorBanner.classList.remove('hidden');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Run It';
+    progressSec.classList.add('hidden');
+  }
+
+  submitBtn.addEventListener('click', async function() {
+    errorBanner.classList.add('hidden');
+    const file = fileInput.files[0];
+    if (!file) { showError('Please select a file.'); return; }
+
+    const name  = document.getElementById('track-name').value.trim();
+    const model = document.querySelector('input[name="track_model"]:checked')?.value || 'htdemucs';
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Uploading…';
+    progressSec.classList.remove('hidden');
+    progressBar.style.width = '0%';
+    progressPct.textContent = '0%';
+    progressLbl.textContent = 'Uploading…';
+
+    // Step 1: get presigned URL
+    let presignData;
+    try {
+      const res = await fetch(<%= presign_tracks_path.to_json %> + '?filename=' + encodeURIComponent(file.name), {
+        headers: { 'X-CSRF-Token': csrfToken }
+      });
+      if (!res.ok) throw new Error('Failed to get upload URL');
+      presignData = await res.json();
+    } catch (e) {
+      showError('Could not start upload: ' + e.message);
+      return;
+    }
+
+    // Step 2: PUT file directly to S3
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          progressBar.style.width = pct + '%';
+          progressPct.textContent = pct + '%';
+        }
+      });
+      xhr.addEventListener('load', function() {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error('S3 upload failed: ' + xhr.status));
+      });
+      xhr.addEventListener('error', () => reject(new Error('Network error during upload')));
+      xhr.open('PUT', presignData.url);
+      xhr.send(file);
+    }).catch(e => { showError(e.message); throw e; });
+
+    // Step 3: create track record
+    progressBar.style.width = '100%';
+    progressPct.textContent = '100%';
+    progressLbl.textContent = 'Queuing…';
+    submitBtn.textContent = 'Queuing…';
+
+    let createData;
+    try {
+      const res = await fetch(<%= tracks_path.to_json %>, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-Token': csrfToken
+        },
+        body: JSON.stringify({ filename: presignData.filename, name: name, model: model })
+      });
+      createData = await res.json();
+      if (!res.ok) throw new Error((createData.errors || []).join(', ') || 'Failed to queue track');
+    } catch (e) {
+      showError(e.message);
+      return;
+    }
+
+    window.location.href = createData.redirect;
+  });
+})();
 </script>

@@ -7,6 +7,13 @@ class ProcessTrackJob < ApplicationJob
     track = Track.find(track_id)
     track.update!(status: "processing", progress: 0)
 
+    if S3Storage.configured?
+      dest = File.join(Rails.application.config.demucs_input_path, track.filename)
+      FileUtils.mkdir_p(Rails.application.config.demucs_input_path)
+      Rails.logger.info("[ProcessTrackJob] Downloading input from S3: #{track.filename}")
+      S3Storage.download_input(track.filename, dest)
+    end
+
     cmd = build_docker_cmd(track)
     Rails.logger.info("[ProcessTrackJob] Running: #{cmd}")
     success = run_with_progress(cmd, track)
@@ -15,6 +22,8 @@ class ProcessTrackJob < ApplicationJob
       if S3Storage.configured?
         upload_stems(track)
         FileUtils.rm_rf(local_output_dir(track))
+        FileUtils.rm_f(File.join(Rails.application.config.demucs_input_path, track.filename))
+        S3Storage.delete_input(track.filename)
       end
       track.update!(status: "done", progress: 100)
     else
