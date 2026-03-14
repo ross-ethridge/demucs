@@ -37,6 +37,7 @@ services:
       AWS_BUCKET:            ${AWS_BUCKET}
       HTTP_READ_TIMEOUT: "300"
       HTTP_WRITE_TIMEOUT: "300"
+      STORAGE_PATH: /tmp/thruster
     depends_on:
       - db
     volumes:
