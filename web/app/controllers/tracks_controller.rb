@@ -15,22 +15,27 @@ class TracksController < ApplicationController
 
     blob     = ActiveStorage::Blob.find_signed!(uploaded)
     original = blob.filename.sanitized
+    model    = Track::MODELS.key?(params[:track][:model]) ? params[:track][:model] : "htdemucs"
+    name     = params[:track][:name].presence || File.basename(original, File.extname(original))
     filename = "#{SecureRandom.hex(8)}_#{original}"
 
-    @track = Track.new(
-      name:     params[:track][:name].presence || File.basename(original, File.extname(original)),
-      filename: filename,
-      model:    Track::MODELS.key?(params[:track][:model]) ? params[:track][:model] : "htdemucs",
-      user:     current_user
-    )
-    @track.audio_file.attach(blob)
+    price_id = Track::STRIPE_PRICES.fetch(model)
 
-    if @track.save
-      ProcessTrackJob.perform_later(@track.id)
-      redirect_to @track, notice: "Track uploaded and queued for processing."
-    else
-      redirect_to new_track_path, alert: @track.errors.full_messages.to_sentence
-    end
+    session = Stripe::Checkout::Session.create(
+      mode: "payment",
+      line_items: [{ price: price_id, quantity: 1 }],
+      metadata: {
+        blob_signed_id: uploaded,
+        filename:       filename,
+        name:           name,
+        model:          model,
+        user_id:        current_user.id
+      },
+      success_url: payments_success_url(session_id: "{CHECKOUT_SESSION_ID}"),
+      cancel_url:  payments_cancel_url
+    )
+
+    redirect_to session.url, allow_other_host: true
   end
 
   def show

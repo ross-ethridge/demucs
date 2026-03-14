@@ -4,6 +4,11 @@ Rails.application.routes.draw do
   resource :registration, only: %i[new create]
   get "up" => "rails/health#show", as: :rails_health_check
 
+  namespace :payments do
+    get :success
+    get :cancel
+  end
+
   root "tracks#index"
 
   resources :tracks, only: [:index, :new, :create, :show, :destroy] do
