@@ -5,8 +5,9 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   namespace :payments do
-    get :success
-    get :cancel
+    get  :success
+    get  :cancel
+    post :webhook
   end
 
   root "tracks#index"
