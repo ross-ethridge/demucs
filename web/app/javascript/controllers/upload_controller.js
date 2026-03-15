@@ -5,10 +5,17 @@ export default class extends Controller {
 
   fileChanged(event) {
     const file = event.target.files[0]
-    if (file) {
-      this.fileNameTarget.textContent = file.name
-      this.fileNameTarget.classList.remove("hidden")
+    if (!file) return
+
+    const maxBytes = 500 * 1024 * 1024 // 500 MB
+    if (file.size > maxBytes) {
+      alert("File is too large. Maximum size is 500 MB.")
+      event.target.value = ""
+      return
     }
+
+    this.fileNameTarget.textContent = file.name
+    this.fileNameTarget.classList.remove("hidden")
   }
 
   uploadStarted() {

@@ -14,6 +14,12 @@ class TracksController < ApplicationController
     return redirect_to new_track_path, alert: "Please select a file." unless uploaded
 
     blob     = ActiveStorage::Blob.find_signed!(uploaded)
+
+    if blob.byte_size > 500.megabytes
+      blob.purge
+      return redirect_to new_track_path, alert: "File is too large. Maximum size is 500 MB."
+    end
+
     original = blob.filename.sanitized
     model    = Track::MODELS.key?(params[:track][:model]) ? params[:track][:model] : "htdemucs"
     name     = params[:track][:name].presence || File.basename(original, File.extname(original))
