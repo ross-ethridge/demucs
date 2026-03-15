@@ -57,5 +57,12 @@
       <%= yield %>
     </main>
 
+    <footer class="border-t border-slate-800 mt-16">
+      <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+        <span class="text-xs text-slate-600">&copy; <%= Date.today.year %> demucs:r</span>
+        <%= link_to "Terms &amp; Privacy", legal_path, class: "text-xs text-slate-600 hover:text-slate-400 transition-colors" %>
+      </div>
+    </footer>
+
   </body>
 </html>
