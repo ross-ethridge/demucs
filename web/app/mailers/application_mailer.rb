@@ -1,4 +1,4 @@
 class ApplicationMailer < ActionMailer::Base
-  default from: "demucs:r <noreply@demucsr.com>"
+  default from: "demucsr <noreply@demucsr.com>"
   layout "mailer"
 end
