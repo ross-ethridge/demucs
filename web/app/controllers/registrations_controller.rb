@@ -9,8 +9,9 @@ class RegistrationsController < ApplicationController
   def create
     @user = User.new(registration_params)
     if @user.save
+      UserMailer.verify_email(@user).deliver_later
       start_new_session_for @user
-      redirect_to root_path, notice: "Welcome to demucs:r!"
+      redirect_to unverified_path, notice: "Welcome! Check your email to verify your account."
     else
       render :new, status: :unprocessable_entity
     end

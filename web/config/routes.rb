@@ -2,8 +2,12 @@ Rails.application.routes.draw do
   resource :session
   resources :passwords, param: :token
   resource :registration, only: %i[new create]
-  get "up"    => "rails/health#show", as: :rails_health_check
-  get "legal" => "pages#legal"
+  resource :account, only: %i[show destroy]
+  get  "up"          => "rails/health#show",        as: :rails_health_check
+  get  "legal"       => "pages#legal"
+  get  "verify"      => "verifications#show",       as: :verify_email
+  get  "unverified"  => "verifications#unverified", as: :unverified
+  post "resend_verification" => "verifications#resend", as: :resend_verification
 
   namespace :payments do
     get  :success

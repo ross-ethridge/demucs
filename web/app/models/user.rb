@@ -4,4 +4,12 @@ class User < ApplicationRecord
   has_many :tracks, dependent: :destroy
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
+
+  generates_token_for :email_verification, expires_in: 24.hours do
+    email_verified_at
+  end
+
+  def email_verified?
+    email_verified_at?
+  end
 end

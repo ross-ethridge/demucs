@@ -1,4 +1,5 @@
 class TracksController < ApplicationController
+  before_action :require_verified_email
   before_action :set_track, only: [:show, :destroy, :download_stem]
   rate_limit to: 10, within: 10.minutes, only: :create, with: -> { redirect_to new_track_path, alert: "Too many uploads. Try again later." }
 

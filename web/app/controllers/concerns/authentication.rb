@@ -49,4 +49,9 @@ module Authentication
       Current.session.destroy
       cookies.delete(:session_id)
     end
+
+    def require_verified_email
+      return if current_user&.email_verified?
+      redirect_to unverified_path, alert: "Please verify your email address to continue."
+    end
 end
