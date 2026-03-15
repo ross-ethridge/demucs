@@ -43,7 +43,6 @@ services:
     depends_on:
       - db
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - input:/data/input
       - output:/data/output
       - models:/data/models
