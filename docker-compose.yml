@@ -70,6 +70,7 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION:            ${AWS_REGION}
       AWS_BUCKET:            ${AWS_BUCKET}
+      JOB_CONCURRENCY: "2"
     command: ["./bin/jobs"]
     depends_on:
       - db
