@@ -11,7 +11,7 @@ Rails.application.routes.draw do
     post :webhook
   end
 
-  root "tracks#index"
+  root "pages#home"
 
   resources :tracks, only: [:index, :new, :create, :show, :destroy] do
     member do
