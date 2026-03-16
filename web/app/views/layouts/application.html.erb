@@ -1,8 +1,19 @@
 <!DOCTYPE html>
-<html class="h-full">
+<html class="h-full" lang="en">
   <head>
-    <title><%= content_for(:title) || "Demucs" %></title>
+    <title><%= content_for(:title) || "demucs:r – Stem Separator for Producers & DJs" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="<%= content_for(:meta_description) || "Separate any song into stems — bass, drums, vocals, and guitar — for $1.50 per track. No subscription. Works in the browser on any device." %>">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="<%= request.base_url + request.path %>">
+
+    <%# Open Graph %>
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="demucs:r">
+    <meta property="og:title" content="<%= content_for(:title) || "demucs:r – Stem Separator for Producers & DJs" %>">
+    <meta property="og:description" content="<%= content_for(:meta_description) || "Separate any song into stems — bass, drums, vocals, and guitar — for $1.50 per track. No subscription. Works in the browser on any device." %>">
+    <meta property="og:url" content="<%= request.base_url + request.path %>">
+
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= yield :head %>

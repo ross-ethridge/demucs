@@ -1,4 +1,107 @@
-<% content_for :title, "demucs:r – Stem Separator for Producers & DJs" %>
+<% content_for :title, "demucs:r – Stem Separator for Producers & DJs | No Subscription" %>
+<% content_for :meta_description, "Isolate vocals, bass, drums, and guitar from any song for $1.50 per track. No subscription required. Online stem separator powered by Meta's demucs AI — works on Mac, Windows, Linux, and mobile." %>
+
+<%# JSON-LD Structured Data %>
+<% content_for :head do %>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "name": "demucs:r",
+      "url": "https://demucsr.com",
+      "description": "Online stem separator that isolates vocals, bass, drums, and guitar from any song. Pay per track from $1.50, no subscription required.",
+      "applicationCategory": "MusicApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "1.50",
+        "priceCurrency": "USD",
+        "description": "Per track stem separation"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is a stem separator?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A stem separator is a tool that uses AI to split a mixed song into its individual components — typically vocals, bass, drums, and other instruments. This lets producers, DJs, and musicians work with individual parts of a track for remixing, sampling, or practice."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does demucs:r work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Upload your audio file, choose your quality tier, and pay per track starting at $1.50. Our servers process the file using Meta's demucs AI model and return four isolated WAV stems: bass, drums, vocals, and synth/guitar."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need a subscription?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. demucs:r is pay-per-track — you only pay when you use it. Standard quality is $1.50 per track and High Quality is $2.00 per track. There are no monthly fees or commitments."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What audio formats are supported?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "demucs:r accepts WAV, MP3, FLAC, and OGG files up to 500 MB."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What stems does it extract?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Each track is separated into four stems: bass, drums, vocals, and other (synth/guitar). All stems are delivered as high-quality WAV files."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it work on mobile and tablet?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Because all processing happens on our servers, demucs:r works on any device with a browser — including iPhone, Android, iPad, and tablets. No app installation needed."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How long does stem separation take?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Processing typically takes a few minutes depending on the length of the track. You'll receive an email when your stems are ready to download."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How long are stems stored?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Stems are stored in the cloud for 24 hours after processing. Make sure to download them before then."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it work on Linux?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. demucs:r is fully browser-based so it works on Linux, Mac, Windows, and any mobile operating system. No native app or Wine required."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+<% end %>
 
 <%# ── HERO ── %>
 <div class="text-center py-20">
@@ -8,12 +111,31 @@
   <h1 class="text-5xl font-bold text-white mb-4 leading-tight">
     Isolate stems from<br>any recording
   </h1>
-  <p class="text-slate-400 text-lg mb-8 max-w-md mx-auto">
-    Upload a track, get isolated bass, drums, vocals, and synth/guitar back in minutes. Built for producers and DJs.
+  <p class="text-slate-400 text-lg mb-8 max-w-lg mx-auto">
+    Upload a song and get isolated bass, drums, vocals, and guitar back as WAV files — from $1.50 per track. No subscription. Works in the browser on any device including mobile and Linux.
   </p>
   <div class="flex items-center justify-center gap-4">
     <%= link_to "Get Started", new_registration_path, class: "bg-violet-600 hover:bg-violet-500 text-white font-medium px-6 py-3 rounded-lg transition-colors text-sm" %>
     <%= link_to "Sign In", new_session_path, class: "text-slate-400 hover:text-white text-sm transition-colors" %>
+  </div>
+</div>
+
+<%# ── USE CASES ── %>
+<div class="border-t border-slate-800 py-16">
+  <h2 class="text-center text-xs font-semibold text-slate-500 uppercase tracking-widest mb-10">Built for</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <h3 class="text-white font-medium text-sm mb-2">DJs & Remixers</h3>
+      <p class="text-slate-500 text-xs leading-relaxed">Pull the acapella or drum loop from any track for edits, bootlegs, and mashups. Get the stems you need without a monthly subscription.</p>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <h3 class="text-white font-medium text-sm mb-2">Producers</h3>
+      <p class="text-slate-500 text-xs leading-relaxed">Sample isolation, reference track analysis, and stem extraction for flips. Powered by Meta's demucs — the same model used by professionals.</p>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <h3 class="text-white font-medium text-sm mb-2">Musicians & Educators</h3>
+      <p class="text-slate-500 text-xs leading-relaxed">Isolate instruments for transcription, practice along to stems, or teach with individual parts. Works on any device — no installation required.</p>
+    </div>
   </div>
 </div>
 
@@ -96,6 +218,45 @@
     </div>
   </div>
   <p class="text-center text-slate-600 text-xs mt-6">Stems are deleted from cloud storage after 24 hours — download before then.</p>
+</div>
+
+<%# ── FAQ ── %>
+<div class="border-t border-slate-800 py-16">
+  <h2 class="text-center text-xs font-semibold text-slate-500 uppercase tracking-widest mb-10">Frequently asked questions</h2>
+  <div class="max-w-2xl mx-auto space-y-6">
+    <div>
+      <h3 class="text-white text-sm font-medium mb-1">What is a stem separator?</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">A stem separator uses AI to split a mixed song into its individual components — vocals, bass, drums, and other instruments. This lets producers, DJs, and musicians work with individual parts of a track for remixing, sampling, flipping, or practice.</p>
+    </div>
+    <div>
+      <h3 class="text-white text-sm font-medium mb-1">Do I need a subscription?</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">No. demucs:r is pay-per-track — you only pay when you use it. Standard quality is $1.50 per track and High Quality is $2.00. No monthly fees, no commitments.</p>
+    </div>
+    <div>
+      <h3 class="text-white text-sm font-medium mb-1">What stems does it extract?</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Every track is separated into four stems: bass, drums, vocals, and other (synth/guitar). All stems are delivered as WAV files.</p>
+    </div>
+    <div>
+      <h3 class="text-white text-sm font-medium mb-1">What audio formats are supported?</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">WAV, MP3, FLAC, and OGG files up to 500 MB.</p>
+    </div>
+    <div>
+      <h3 class="text-white text-sm font-medium mb-1">Does it work on mobile, tablet, and Linux?</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Yes. All processing happens on our servers so demucs:r works in any browser — iPhone, Android, iPad, Mac, Windows, and Linux. No app or installation needed.</p>
+    </div>
+    <div>
+      <h3 class="text-white text-sm font-medium mb-1">How long does processing take?</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Most tracks are ready within a few minutes. You'll get an email when your stems are ready to download.</p>
+    </div>
+    <div>
+      <h3 class="text-white text-sm font-medium mb-1">How long are stems stored?</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Stems are available for 24 hours after processing. Download them before then — they're permanently deleted after that window.</p>
+    </div>
+    <div>
+      <h3 class="text-white text-sm font-medium mb-1">What AI model does it use?</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">demucs:r uses Meta's open-source demucs model — one of the highest quality stem separation models available. The High Quality tier uses htdemucs_ft, a fine-tuned version optimised for music production use cases.</p>
+    </div>
+  </div>
 </div>
 
 <%# ── CTA ── %>
