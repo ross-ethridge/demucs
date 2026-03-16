@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   resource :account, only: %i[show destroy]
   get  "up"          => "rails/health#show",        as: :rails_health_check
   get  "legal"       => "pages#legal"
+  get  "sitemap.xml" => "pages#sitemap", as: :sitemap, defaults: { format: :xml }
   get  "verify"      => "verifications#show",       as: :verify_email
   get  "unverified"  => "verifications#unverified", as: :unverified
   post "resend_verification" => "verifications#resend", as: :resend_verification

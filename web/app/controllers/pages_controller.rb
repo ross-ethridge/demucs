@@ -7,4 +7,8 @@ class PagesController < ApplicationController
 
   def legal
   end
+
+  def sitemap
+    expires_in 1.day, public: true
+  end
 end
