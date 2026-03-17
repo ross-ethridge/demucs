@@ -1,1 +1,15 @@
-# See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
+User-agent: *
+Allow: /
+Allow: /legal
+Disallow: /session
+Disallow: /registration
+Disallow: /passwords
+Disallow: /account
+Disallow: /tracks
+Disallow: /verify
+Disallow: /unverified
+Disallow: /resend_verification
+Disallow: /payments/
+Disallow: /up
+
+Sitemap: https://demucsr.com/sitemap.xml
