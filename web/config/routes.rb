@@ -23,4 +23,6 @@ Rails.application.routes.draw do
       get :download_stem
     end
   end
+
+  match "*path", to: "honeypot#trap", via: :all
 end
