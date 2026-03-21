@@ -11,15 +11,18 @@ class TracksController < ApplicationController
   end
 
   def create
-    uploaded = params[:track][:audio_file]
-    return redirect_to new_track_path, alert: "Please select a file." unless uploaded
+    uploaded_file = params[:track][:audio_file]
+    return redirect_to new_track_path, alert: "Please select a file." unless uploaded_file
 
-    blob     = ActiveStorage::Blob.find_signed!(uploaded)
-
-    if blob.byte_size > 500.megabytes
-      blob.purge
+    if uploaded_file.size > 500.megabytes
       return redirect_to new_track_path, alert: "File is too large. Maximum size is 500 MB."
     end
+
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io:           uploaded_file,
+      filename:     uploaded_file.original_filename,
+      content_type: uploaded_file.content_type
+    )
 
     original = blob.filename.sanitized
     model    = Track::MODELS.key?(params[:track][:model]) ? params[:track][:model] : "htdemucs_ft"
@@ -27,7 +30,6 @@ class TracksController < ApplicationController
     filename = "#{SecureRandom.hex(8)}_#{original}"
 
     if ENV["FREE_MODE"] == "true"
-      blob = ActiveStorage::Blob.find_signed!(uploaded)
       track = Track.new(name: name, filename: filename, model: model, user: current_user)
       track.audio_file.attach(blob)
       track.save!
@@ -41,7 +43,7 @@ class TracksController < ApplicationController
       mode: "payment",
       line_items: [{ price: price_id, quantity: 1 }],
       metadata: {
-        blob_signed_id: uploaded,
+        blob_signed_id: blob.signed_id,
         filename:       filename,
         name:           name,
         model:          model,
@@ -72,7 +74,10 @@ class TracksController < ApplicationController
     end
 
     if S3Storage.configured?
-      redirect_to S3Storage.presigned_url(@track, params[:stem]), allow_other_host: true
+      filename = "#{@track.stem_name}_#{params[:stem]}.wav"
+      response.headers["Content-Disposition"] = "attachment; filename=\"#{filename}\""
+      response.headers["Content-Type"] = "audio/wav"
+      self.response_body = S3Storage.stream(@track, params[:stem])
     else
       path = @track.stem_path(params[:stem])
       send_file path, filename: "#{@track.stem_name}_#{params[:stem]}.wav", type: "audio/wav", disposition: "attachment"

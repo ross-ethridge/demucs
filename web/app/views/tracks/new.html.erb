@@ -27,11 +27,8 @@
           </div>
           <%= f.file_field :audio_file,
                 accept: ".wav,.mp3,.flac,.ogg",
-                direct_upload: true,
                 class: "sr-only",
-                data: {
-                  action: "change->upload#fileChanged direct-upload:start->upload#uploadStarted direct-upload:progress->upload#uploadProgress direct-upload:end->upload#uploadEnd"
-                } %>
+                data: { action: "change->upload#fileChanged" } %>
         </label>
         <p class="text-xs text-slate-500 mt-1.5 hidden" data-upload-target="fileName"></p>
       </div>
