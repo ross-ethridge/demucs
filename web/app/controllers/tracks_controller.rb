@@ -27,6 +27,15 @@ class TracksController < ApplicationController
     name     = params[:track][:name].presence || File.basename(original, File.extname(original))
     filename = "#{SecureRandom.hex(8)}_#{original}"
 
+    if ENV["FREE_MODE"] == "true"
+      blob = ActiveStorage::Blob.find_signed!(uploaded)
+      track = Track.new(name: name, filename: filename, model: model, user: current_user)
+      track.audio_file.attach(blob)
+      track.save!
+      ProcessTrackJob.perform_later(track.id)
+      return redirect_to track, notice: "Your track is queued for processing."
+    end
+
     price_id = Track::STRIPE_PRICES.fetch(model)
 
     session = Stripe::Checkout::Session.create(
