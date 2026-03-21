@@ -8,7 +8,7 @@ class S3Storage
   end
 
   def self.presigned_url(track, stem, expires_in: 1.hour)
-    bucket.object(key(track, stem)).presigned_url(:get, expires_in: expires_in.to_i)
+    bucket(public: true).object(key(track, stem)).presigned_url(:get, expires_in: expires_in.to_i)
   end
 
   def self.delete(track)
@@ -24,14 +24,15 @@ class S3Storage
       "stems/#{track.stem_name}/#{track.stem_name}_#{stem}.wav"
     end
 
-    def bucket
+    def bucket(public: false)
+      endpoint = public ? ENV["PUBLIC_S3_ENDPOINT"] : ENV["S3_ENDPOINT"]
       options = {
         region:            ENV.fetch("AWS_REGION"),
         access_key_id:     ENV.fetch("AWS_ACCESS_KEY_ID"),
         secret_access_key: ENV.fetch("AWS_SECRET_ACCESS_KEY")
       }
-      if ENV["S3_ENDPOINT"].present?
-        options[:endpoint] = ENV["S3_ENDPOINT"]
+      if endpoint.present?
+        options[:endpoint] = endpoint
         options[:force_path_style] = true
       end
       Aws::S3::Resource.new(**options).bucket(ENV.fetch("AWS_BUCKET"))

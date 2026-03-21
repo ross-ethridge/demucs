@@ -4,6 +4,7 @@ services:
     restart: always
     command: server /data --console-address ":9001"
     ports:
+      - "8000:9000"
       - "9001:9001"
     environment:
       MINIO_ROOT_USER:     ${AWS_ACCESS_KEY_ID}
@@ -49,6 +50,7 @@ services:
       AWS_REGION:            ${AWS_REGION}
       AWS_BUCKET:            ${AWS_BUCKET}
       S3_ENDPOINT:           http://minio:9000
+      PUBLIC_S3_ENDPOINT:    ${PUBLIC_S3_ENDPOINT}
       HTTP_READ_TIMEOUT: "600"
       HTTP_WRITE_TIMEOUT: "600"
       STORAGE_PATH: /data/thruster
@@ -85,6 +87,7 @@ services:
       AWS_REGION:            ${AWS_REGION}
       AWS_BUCKET:            ${AWS_BUCKET}
       S3_ENDPOINT:           http://minio:9000
+      PUBLIC_S3_ENDPOINT:    ${PUBLIC_S3_ENDPOINT}
       JOB_CONCURRENCY: "2"
     command: ["./bin/jobs"]
     depends_on:
