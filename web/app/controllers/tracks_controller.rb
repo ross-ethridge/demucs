@@ -8,7 +8,7 @@ class TracksController < ApplicationController
   end
 
   def new
-    @track = Track.new(model: "htdemucs")
+    @track = Track.new(model: "htdemucs_ft")
   end
 
   def create
@@ -23,7 +23,7 @@ class TracksController < ApplicationController
     end
 
     original = blob.filename.sanitized
-    model    = Track::MODELS.key?(params[:track][:model]) ? params[:track][:model] : "htdemucs"
+    model    = Track::MODELS.key?(params[:track][:model]) ? params[:track][:model] : "htdemucs_ft"
     name     = params[:track][:name].presence || File.basename(original, File.extname(original))
     filename = "#{SecureRandom.hex(8)}_#{original}"
 

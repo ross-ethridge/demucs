@@ -36,20 +36,7 @@
         <p class="text-xs text-slate-500 mt-1.5 hidden" data-upload-target="fileName"></p>
       </div>
 
-      <div class="mb-6">
-        <label class="block text-sm font-medium text-slate-300 mb-2">Quality</label>
-        <div class="grid grid-cols-2 gap-3">
-          <% Track::MODELS.each do |value, label| %>
-            <label class="relative flex items-center gap-3 bg-slate-800 border border-slate-700 rounded-lg p-3 cursor-pointer has-[:checked]:border-violet-500 has-[:checked]:bg-violet-900/20 transition-colors">
-              <%= f.radio_button :model, value, class: "sr-only" %>
-              <div class="flex-1 min-w-0">
-                <div class="text-sm font-medium text-white"><%= label.split(" · ").first %></div>
-                <div class="text-xs text-slate-500"><%= label.split(" · ").last %></div>
-              </div>
-            </label>
-          <% end %>
-        </div>
-      </div>
+      <%= f.hidden_field :model, value: "htdemucs_ft" %>
 
       <div class="hidden mb-4" data-upload-target="progressSection">
         <div class="flex justify-between text-xs text-slate-400 mb-1">
