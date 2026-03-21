@@ -1,9 +1,0 @@
-<h2>Your stems are ready</h2>
-
-<p>Hi <%= @user.email_address %>,</p>
-
-<p>Your track <strong><%= @track.name %></strong> has been processed. Your stems are ready to download.</p>
-
-<p><%= link_to "Download your stems", track_url(@track) %></p>
-
-<p style="color: #888; font-size: 12px;">Stems are deleted from cloud storage after 24 hours — download before then.</p>

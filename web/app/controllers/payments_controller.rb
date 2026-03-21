@@ -1,7 +1,6 @@
 class PaymentsController < ApplicationController
   skip_before_action :verify_authenticity_token, only: [:webhook]
   skip_before_action :require_authentication, only: [:webhook]
-  before_action :require_verified_email, except: [:webhook]
 
   def success
     checkout_session = Stripe::Checkout::Session.retrieve(params[:session_id])

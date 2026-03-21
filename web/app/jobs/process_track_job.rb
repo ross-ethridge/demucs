@@ -24,17 +24,14 @@ class ProcessTrackJob < ApplicationJob
       track.audio_file.purge
       FileUtils.rm_f(dest)
       track.update!(status: "done", progress: 100)
-      TrackMailer.stems_ready(track).deliver_later
     else
       track.update!(status: "failed", progress: track.progress)
-      TrackMailer.processing_failed(track).deliver_later
     end
   rescue ActiveRecord::RecordNotFound
     Rails.logger.error("[ProcessTrackJob] Track #{track_id} not found")
   rescue => e
     Rails.logger.error("[ProcessTrackJob] #{e.class}: #{e.message}")
     track&.update!(status: "failed")
-    TrackMailer.processing_failed(track).deliver_later rescue nil
   end
 
   private
