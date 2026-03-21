@@ -25,11 +25,16 @@ class S3Storage
     end
 
     def bucket
-      Aws::S3::Resource.new(
+      options = {
         region:            ENV.fetch("AWS_REGION"),
         access_key_id:     ENV.fetch("AWS_ACCESS_KEY_ID"),
         secret_access_key: ENV.fetch("AWS_SECRET_ACCESS_KEY")
-      ).bucket(ENV.fetch("AWS_BUCKET"))
+      }
+      if ENV["S3_ENDPOINT"].present?
+        options[:endpoint] = ENV["S3_ENDPOINT"]
+        options[:force_path_style] = true
+      end
+      Aws::S3::Resource.new(**options).bucket(ENV.fetch("AWS_BUCKET"))
     end
   end
 end

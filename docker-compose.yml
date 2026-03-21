@@ -1,4 +1,16 @@
 services:
+  minio:
+    image: minio/minio
+    restart: always
+    command: server /data --console-address ":9001"
+    ports:
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER:     ${AWS_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - /mnt/minio-data:/data
+
   db:
     image: postgres:16
     restart: always
@@ -36,12 +48,14 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION:            ${AWS_REGION}
       AWS_BUCKET:            ${AWS_BUCKET}
+      S3_ENDPOINT:           http://minio:9000
       HTTP_READ_TIMEOUT: "600"
       HTTP_WRITE_TIMEOUT: "600"
       STORAGE_PATH: /data/thruster
       TLS_DOMAIN: ${TLS_DOMAIN}
     depends_on:
       - db
+      - minio
     volumes:
       - input:/data/input
       - output:/data/output
@@ -70,10 +84,12 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION:            ${AWS_REGION}
       AWS_BUCKET:            ${AWS_BUCKET}
+      S3_ENDPOINT:           http://minio:9000
       JOB_CONCURRENCY: "2"
     command: ["./bin/jobs"]
     depends_on:
       - db
+      - minio
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - input:/data/input
