@@ -17,6 +17,7 @@ class ProcessTrackJob < ApplicationJob
     success = run_with_progress(cmd, track)
 
     if success
+      trim_stems(track)
       if S3Storage.configured?
         upload_stems(track)
         FileUtils.rm_rf(local_output_dir(track))
@@ -69,6 +70,23 @@ class ProcessTrackJob < ApplicationJob
       exit_status = wait_thr.value
     end
     exit_status.success?
+  end
+
+  def trim_stems(track)
+    track.stems.each do |stem|
+      path = track.stem_path(stem)
+      next unless File.exist?(path)
+
+      tmp = "#{path}.tmp.wav"
+      cmd = "ffmpeg -i #{Shellwords.escape(path)} -af silenceremove=stop_periods=-1:stop_duration=1:stop_threshold=-50dB #{Shellwords.escape(tmp)} -y 2>/dev/null"
+      if system(cmd) && File.exist?(tmp)
+        FileUtils.mv(tmp, path)
+        Rails.logger.info("[ProcessTrackJob] Trimmed silence from #{stem}")
+      else
+        FileUtils.rm_f(tmp)
+        Rails.logger.warn("[ProcessTrackJob] ffmpeg trim failed for #{stem}, keeping original")
+      end
+    end
   end
 
   def upload_stems(track)
