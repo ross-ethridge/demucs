@@ -83,7 +83,7 @@ class ProcessTrackJob < ApplicationJob
       # Pass 1: trim silence and measure loudness
       pass1_out, pass1_status = Open3.capture2e(
         "ffmpeg -i #{escaped} " \
-        "-af silenceremove=start_periods=1:start_duration=1:start_threshold=-50dB:stop_periods=1:stop_duration=1:stop_threshold=-50dB," \
+        "-af silenceremove=start_periods=1:start_duration=0.1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_duration=0.1:start_threshold=-50dB,areverse," \
         "loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json " \
         "-f null - 2>&1"
       )
@@ -105,16 +105,20 @@ class ProcessTrackJob < ApplicationJob
                    ":offset=#{stats["target_offset"]}"
 
         pass2_cmd = "ffmpeg -i #{escaped} " \
-                    "-af silenceremove=start_periods=1:start_duration=1:start_threshold=-50dB:stop_periods=1:stop_duration=1:stop_threshold=-50dB," \
+                    "-af silenceremove=start_periods=1:start_duration=0.1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_duration=0.1:start_threshold=-50dB,areverse," \
                     "#{loudnorm} -c:a pcm_f32le #{Shellwords.escape(tmp)} -y 2>/dev/null"
 
-        if system(pass2_cmd) && File.exist?(tmp)
-          FileUtils.mv(tmp, path)
+        tmp2 = "#{path}.tmp2.wav"
+        remux_cmd = "ffmpeg -i #{Shellwords.escape(tmp)} -c:a copy #{Shellwords.escape(tmp2)} -y 2>/dev/null"
+
+        if system(pass2_cmd) && File.exist?(tmp) && system(remux_cmd) && File.exist?(tmp2)
+          FileUtils.mv(tmp2, path)
           Rails.logger.info("[ProcessTrackJob] Trimmed and normalized #{stem}")
         else
-          FileUtils.rm_f(tmp)
           Rails.logger.warn("[ProcessTrackJob] ffmpeg pass 2 failed for #{stem}, keeping original")
         end
+        FileUtils.rm_f(tmp)
+        FileUtils.rm_f(tmp2)
       else
         Rails.logger.warn("[ProcessTrackJob] Could not parse loudnorm stats for #{stem}, keeping original")
       end
