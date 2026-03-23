@@ -58,7 +58,7 @@ class ProcessTrackJob < ApplicationJob
               per_model_pct = match[1].to_i
               run_index += 1 if per_model_pct < last_pct
               last_pct = per_model_pct
-              overall  = ((run_index * 100 + per_model_pct) / shifts.to_f).round
+              overall  = ((run_index * 100 + per_model_pct) / (shifts * 4).to_f).round
               track.update!(progress: overall) if overall != track.progress
             else
               Rails.logger.info("[ProcessTrackJob] demucs: #{segment}")
