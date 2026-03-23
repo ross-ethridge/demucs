@@ -42,6 +42,7 @@ class ProcessTrackJob < ApplicationJob
     run_index  = 0
     last_pct   = -1
     buf        = ""
+    shifts     = ENV.fetch("DEMUCS_SHIFTS", "1").to_i
 
     Open3.popen2e(cmd) do |stdin, output, wait_thr|
       stdin.close
@@ -57,7 +58,7 @@ class ProcessTrackJob < ApplicationJob
               per_model_pct = match[1].to_i
               run_index += 1 if per_model_pct < last_pct
               last_pct = per_model_pct
-              overall  = ((run_index * 100 + per_model_pct) / 4.0).round
+              overall  = ((run_index * 100 + per_model_pct) / shifts.to_f).round
               track.update!(progress: overall) if overall != track.progress
             else
               Rails.logger.info("[ProcessTrackJob] demucs: #{segment}")
@@ -81,7 +82,7 @@ class ProcessTrackJob < ApplicationJob
       escaped = Shellwords.escape(path)
 
       cmd = "ffmpeg -i #{escaped} " \
-            "-af silenceremove=start_periods=1:start_duration=0.1:start_threshold=-40dB:stop_periods=-1:stop_duration=0.1:stop_threshold=-40dB," \
+            "-af silenceremove=start_periods=1:start_duration=0.1:start_threshold=-45dB:stop_periods=-1:stop_duration=0.1:stop_threshold=-45dB," \
             "dynaudnorm=f=500:g=31:p=0.95:m=10 " \
             "-c:a pcm_f32le #{Shellwords.escape(tmp)} -y 2>/dev/null"
 
