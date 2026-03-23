@@ -78,13 +78,45 @@ class ProcessTrackJob < ApplicationJob
       next unless File.exist?(path)
 
       tmp = "#{path}.tmp.wav"
-      cmd = "ffmpeg -i #{Shellwords.escape(path)} -af silenceremove=stop_periods=-1:stop_duration=1:stop_threshold=-50dB #{Shellwords.escape(tmp)} -y 2>/dev/null"
-      if system(cmd) && File.exist?(tmp)
-        FileUtils.mv(tmp, path)
-        Rails.logger.info("[ProcessTrackJob] Trimmed silence from #{stem}")
+      escaped = Shellwords.escape(path)
+
+      # Pass 1: trim silence and measure loudness
+      pass1_out, pass1_status = Open3.capture2e(
+        "ffmpeg -i #{escaped} " \
+        "-af silenceremove=start_periods=1:start_duration=1:start_threshold=-50dB:stop_periods=1:stop_duration=1:stop_threshold=-50dB," \
+        "loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json " \
+        "-f null - 2>&1"
+      )
+
+      unless pass1_status.success?
+        Rails.logger.warn("[ProcessTrackJob] ffmpeg pass 1 failed for #{stem}, keeping original")
+        next
+      end
+
+      stats = JSON.parse(pass1_out.scan(/\{[^}]+\}/).last || "{}")
+
+      if %w[input_i input_tp input_lra input_thresh target_offset].all? { |k| stats[k] }
+        # Pass 2: apply trim + calibrated normalization
+        loudnorm = "loudnorm=I=-16:TP=-1.5:LRA=11:linear=true" \
+                   ":measured_I=#{stats["input_i"]}" \
+                   ":measured_TP=#{stats["input_tp"]}" \
+                   ":measured_LRA=#{stats["input_lra"]}" \
+                   ":measured_thresh=#{stats["input_thresh"]}" \
+                   ":offset=#{stats["target_offset"]}"
+
+        pass2_cmd = "ffmpeg -i #{escaped} " \
+                    "-af silenceremove=start_periods=1:start_duration=1:start_threshold=-50dB:stop_periods=1:stop_duration=1:stop_threshold=-50dB," \
+                    "#{loudnorm} -c:a pcm_f32le #{Shellwords.escape(tmp)} -y 2>/dev/null"
+
+        if system(pass2_cmd) && File.exist?(tmp)
+          FileUtils.mv(tmp, path)
+          Rails.logger.info("[ProcessTrackJob] Trimmed and normalized #{stem}")
+        else
+          FileUtils.rm_f(tmp)
+          Rails.logger.warn("[ProcessTrackJob] ffmpeg pass 2 failed for #{stem}, keeping original")
+        end
       else
-        FileUtils.rm_f(tmp)
-        Rails.logger.warn("[ProcessTrackJob] ffmpeg trim failed for #{stem}, keeping original")
+        Rails.logger.warn("[ProcessTrackJob] Could not parse loudnorm stats for #{stem}, keeping original")
       end
     end
   end
