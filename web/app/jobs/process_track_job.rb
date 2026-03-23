@@ -83,7 +83,7 @@ class ProcessTrackJob < ApplicationJob
       # Pass 1: trim silence and measure loudness
       pass1_out, pass1_status = Open3.capture2e(
         "ffmpeg -i #{escaped} " \
-        "-af silenceremove=start_periods=1:start_duration=0.1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_duration=0.1:start_threshold=-50dB,areverse," \
+        "-af silenceremove=start_periods=1:start_duration=0.1:start_threshold=-50dB:stop_periods=-1:stop_duration=0.1:stop_threshold=-50dB," \
         "loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json " \
         "-f null - 2>&1"
       )
@@ -105,7 +105,7 @@ class ProcessTrackJob < ApplicationJob
                    ":offset=#{stats["target_offset"]}"
 
         pass2_cmd = "ffmpeg -i #{escaped} " \
-                    "-af silenceremove=start_periods=1:start_duration=0.1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_duration=0.1:start_threshold=-50dB,areverse," \
+                    "-af silenceremove=start_periods=1:start_duration=0.1:start_threshold=-50dB:stop_periods=-1:stop_duration=0.1:stop_threshold=-50dB," \
                     "#{loudnorm} -c:a pcm_f32le #{Shellwords.escape(tmp)} -y 2>/dev/null"
 
         tmp2 = "#{path}.tmp2.wav"
