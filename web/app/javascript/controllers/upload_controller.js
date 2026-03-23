@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["fileName", "progressSection", "progressBar", "progressPct"]
+  static targets = ["fileName", "progressSection", "progressBar", "progressPct", "fileInput", "submitBtn"]
 
   fileChanged(event) {
     const file = event.target.files[0]
@@ -18,19 +18,44 @@ export default class extends Controller {
     this.fileNameTarget.classList.remove("hidden")
   }
 
-  uploadStarted() {
-    this.progressSectionTarget.classList.remove("hidden")
-    this.progressBarTarget.style.width = "0%"
-    this.progressPctTarget.textContent = "0%"
-  }
+  submit(event) {
+    event.preventDefault()
 
-  uploadProgress(event) {
-    const pct = Math.round(event.detail.progress)
-    this.progressBarTarget.style.width = pct + "%"
-    this.progressPctTarget.textContent = pct + "%"
-  }
+    const form = this.element
+    const formData = new FormData(form)
 
-  uploadEnd() {
-    this.progressPctTarget.textContent = "Queuing…"
+    const xhr = new XMLHttpRequest()
+    xhr.open("POST", form.action)
+    xhr.setRequestHeader("X-CSRF-Token", document.querySelector("meta[name=csrf-token]").content)
+    xhr.setRequestHeader("Accept", "text/html, application/xhtml+xml")
+
+    xhr.upload.addEventListener("loadstart", () => {
+      this.progressSectionTarget.classList.remove("hidden")
+      this.progressBarTarget.style.width = "0%"
+      this.progressPctTarget.textContent = "0%"
+      if (this.hasSubmitBtnTarget) this.submitBtnTarget.disabled = true
+    })
+
+    xhr.upload.addEventListener("progress", (e) => {
+      if (!e.lengthComputable) return
+      const pct = Math.round((e.loaded / e.total) * 100)
+      this.progressBarTarget.style.width = pct + "%"
+      this.progressPctTarget.textContent = pct + "%"
+    })
+
+    xhr.upload.addEventListener("load", () => {
+      this.progressPctTarget.textContent = "Queuing…"
+    })
+
+    xhr.addEventListener("load", () => {
+      if (xhr.responseURL) window.location.href = xhr.responseURL
+    })
+
+    xhr.addEventListener("error", () => {
+      alert("Upload failed. Please try again.")
+      if (this.hasSubmitBtnTarget) this.submitBtnTarget.disabled = false
+    })
+
+    xhr.send(formData)
   }
 }
