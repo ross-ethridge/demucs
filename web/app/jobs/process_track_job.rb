@@ -82,7 +82,7 @@ class ProcessTrackJob < ApplicationJob
       escaped = Shellwords.escape(path)
 
       cmd = "ffmpeg -i #{escaped} " \
-            "-af silenceremove=start_periods=1:start_duration=0.1:start_threshold=-45dB:stop_periods=-1:stop_duration=0.1:stop_threshold=-45dB," \
+            "-af silenceremove=start_periods=1:start_duration=0.1:start_threshold=-45dB:stop_periods=-1:stop_duration=1.0:stop_threshold=-45dB," \
             "dynaudnorm=f=500:g=31:p=0.95:m=10 " \
             "-c:a pcm_f32le #{Shellwords.escape(tmp)} -y 2>/dev/null"
 
