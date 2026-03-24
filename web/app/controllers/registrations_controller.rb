@@ -7,7 +7,7 @@ class RegistrationsController < ApplicationController
   end
 
   def create
-    @user = User.new(registration_params)
+    @user = User.new(registration_params.merge(email_verified_at: Time.current))
     if @user.save
       start_new_session_for @user
       redirect_to new_track_path, notice: "Welcome!"
@@ -17,6 +17,10 @@ class RegistrationsController < ApplicationController
   end
 
   private
+
+  def require_no_users
+    redirect_to new_session_path if User.exists?
+  end
 
   def registration_params
     params.require(:user).permit(:email_address, :password, :password_confirmation)
