@@ -1,5 +1,5 @@
 class TracksController < ApplicationController
-  before_action :set_track, only: [:show, :destroy, :download_stem]
+  before_action :set_track, only: [:show, :destroy, :download_stem, :stream_stem]
   rate_limit to: 10, within: 10.minutes, only: :create, with: -> { redirect_to new_track_path, alert: "Too many uploads. Try again later." }
 
   def index
@@ -46,6 +46,19 @@ class TracksController < ApplicationController
       Rails.logger.error("[destroy] Cleanup failed for track #{@track.id}: #{e.message}")
     ensure
       redirect_to tracks_path, notice: "Track deleted."
+  end
+
+  def stream_stem
+    unless Track::STEMS.include?(params[:stem])
+      return head :bad_request
+    end
+
+    if S3Storage.configured?
+      redirect_to S3Storage.browser_url(@track, params[:stem]), allow_other_host: true
+    else
+      path = @track.stem_path(params[:stem])
+      send_file path, type: "audio/wav", disposition: "inline"
+    end
   end
 
   def download_stem

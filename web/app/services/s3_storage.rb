@@ -19,6 +19,18 @@ class S3Storage
     end
   end
 
+  def self.browser_url(track, stem)
+    public_endpoint = ENV.fetch("MINIO_PUBLIC_ENDPOINT", "http://localhost:9000")
+    public_bucket = Aws::S3::Resource.new(
+      region:            ENV.fetch("AWS_REGION"),
+      access_key_id:     ENV.fetch("AWS_ACCESS_KEY_ID"),
+      secret_access_key: ENV.fetch("AWS_SECRET_ACCESS_KEY"),
+      endpoint:          public_endpoint,
+      force_path_style:  true
+    ).bucket(ENV.fetch("AWS_BUCKET"))
+    public_bucket.object(key(track, stem)).presigned_url(:get, expires_in: 3600)
+  end
+
   def self.delete(track)
     Track::STEMS.each do |stem|
       bucket.object(key(track, stem)).delete

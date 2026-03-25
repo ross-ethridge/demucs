@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   resources :tracks, only: [:index, :new, :create, :show, :destroy] do
     member do
       get :download_stem
+      get :stream_stem
     end
   end
 
