@@ -64,9 +64,9 @@ Copy `env.template` to `.env`:
 cp env.template .env
 ```
 
-The app will not start without a `.env` file. Here is what each variable does and whether you need to change it for local use:
+The app will not start without a `.env` file. Here is what each variable does:
 
-### Required to run locally
+### Required
 
 | Variable | Default | What to do |
 | --- | --- | --- |
@@ -82,9 +82,16 @@ The app will not start without a `.env` file. Here is what each variable does an
 | `DEMUCS_SHIFTS` | `1` | Number of prediction passes. Higher = better quality but slower. `3`–`5` is a good balance |
 | `DEMUCS_THREADS` | `4` | CPU threads allocated to Demucs |
 
-### Not needed for local use
+### MinIO (local object storage)
 
-The AWS/S3 variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_BUCKET`) are only needed if you want to store stems in S3. Leave them blank and stems will be stored on the local `output` volume instead — no AWS account required.
+| Variable | Default | Description |
+| --- | --- | --- |
+| `AWS_ACCESS_KEY_ID` | `minioadmin` | MinIO root username — change if desired |
+| `AWS_SECRET_ACCESS_KEY` | `minioadmin` | MinIO root password — change if desired |
+| `AWS_REGION` | `us-east-1` | Region string (MinIO ignores this, but it must be set) |
+| `AWS_BUCKET` | `demucs` | Bucket name — created automatically on first run |
+
+The app uses [MinIO](https://min.io/) for file storage — a local S3-compatible object store that runs as part of the Docker Compose stack. No AWS account or external storage is needed. The MinIO console is available at **http://localhost:9001** once the stack is running.
 
 A minimal `.env` for local use looks like this:
 
@@ -95,6 +102,10 @@ SECRET_KEY_BASE=paste_generated_value_here
 DEMUCS_GPU=false
 DEMUCS_SHIFTS=3
 DEMUCS_THREADS=4
+AWS_ACCESS_KEY_ID=minioadmin
+AWS_SECRET_ACCESS_KEY=minioadmin
+AWS_REGION=us-east-1
+AWS_BUCKET=demucs
 ```
 
 ---
