@@ -31,12 +31,6 @@
     <%= link_to "Drop your first track", new_track_path, class: "text-violet-400 hover:text-violet-300 text-sm font-medium transition-colors" %>
   </div>
 <% else %>
-  <div class="flex items-center gap-2 bg-amber-900/20 border border-amber-800/50 rounded-lg px-3 py-2 mb-4">
-    <svg class="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-    </svg>
-    <p class="text-xs text-amber-400">Stems are deleted from cloud storage after 24 hours — download before then.</p>
-  </div>
   <div id="tracks" class="flex flex-col gap-3">
     <%= render @tracks %>
   </div>
