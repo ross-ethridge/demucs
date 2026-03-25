@@ -2,10 +2,7 @@ class Track < ApplicationRecord
   belongs_to :user
   has_one_attached :audio_file, dependent: :purge_later
   STATUSES = %w[pending processing done failed].freeze
-  MODELS   = { "htdemucs_ft" => "High Quality · $1.00" }.freeze
-  STRIPE_PRICES = {
-    "htdemucs_ft" => ENV["STRIPE_PRICE_FINE_TUNED"]
-  }.freeze
+  MODELS = { "htdemucs_ft" => "High Quality" }.freeze
 
   validates :name,     presence: true
   validates :filename, presence: true

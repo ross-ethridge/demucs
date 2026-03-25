@@ -1,5 +1,4 @@
 class HoneypotController < ApplicationController
-  skip_before_action :require_authentication, raise: false
 
   def trap
     redirect_to "http://localhost", allow_other_host: true

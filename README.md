@@ -1,185 +1,153 @@
-# Docker Facebook Demucs
+# demucs:r
 
-## What is Demucs?
+A self-hosted web app for splitting any song into its individual stems — bass, drums, vocals, and synth/guitar — powered by Meta's [Demucs](https://github.com/adefossez/demucs) AI model.
 
-[Demucs](https://github.com/adefossez/demucs) is an open-source music source separation model developed by Meta Research (Facebook AI). It uses a deep neural network to split a mixed audio track into its individual stems: **bass**, **drums**, **vocals**, and **other** instruments.
+Upload a track, wait a few minutes, download your stems as WAV files. No account required. Runs entirely on your machine.
 
-It is one of the highest-quality open-source tools available for this task, capable of producing clean, usable stems from most genres of music. Common use cases include remixing, karaoke track generation, music practice, and audio production.
+![demucs:r screenshot](docs/screenshot.png)
 
-Several model variants are available, trading off speed and quality:
+---
 
-| Model | Description |
+## How it works
+
+Demucs uses a hybrid transformer neural network trained on thousands of songs to separate a mixed audio track into four isolated stems:
+
+| Stem | Contains |
 | --- | --- |
-| `htdemucs` | Default hybrid transformer model — best balance of quality and speed |
-| `htdemucs_ft` | Fine-tuned version of `htdemucs` — highest quality, slower |
-| `mdx` | MDX-Net model, competitive on vocals |
-| `mdx_extra` | MDX-Net with extra training data |
+| **Vocals** | Lead and backing vocals |
+| **Bass** | Bass guitar, sub bass |
+| **Drums** | Kick, snare, hi-hats, cymbals |
+| **Other** | Synths, guitars, keys, everything else |
 
-This repository wraps Demucs in a Docker container so it can be run without manually managing Python environments or CUDA dependencies.
+After separation, each stem is automatically post-processed:
 
-## Prerequisites
-- [Docker](https://docs.docker.com/get-docker/)
-- An Nvidia GPU with CUDA support is optional but strongly recommended for reasonable performance. The image uses CUDA 11.8 wheels and supports Ada Lovelace GPUs (e.g. RTX 4060) and earlier. Nvidia drivers 450.80.02+ are required for GPU use.
+- **Silence removal** — gaps longer than 1 second below -40dB are stripped out, removing the near-silence bleed that source separation models produce between musical phrases
+- **Dynamic normalization** — `dynaudnorm` levels out the volume across each stem so quiet sections aren't buried next to loud ones
+- **Lossless output** — stems are written as 32-bit float WAV (`pcm_f32le`), the same format Demucs produces internally, with no quality loss
 
-## Usage
+The model used is `htdemucs_ft` — the fine-tuned version of Demucs, which produces the highest quality results.
 
-1. Clone this repository:
+---
+
+## Requirements
+
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/)
+- ~10 GB disk space for the model and Docker images
+- A reasonably modern CPU (6+ cores recommended) or an Nvidia GPU for faster processing
+
+---
+
+## Quick start
+
 ```bash
-# HTTPS
 git clone https://github.com/ross-ethridge/demucs.git
-# or SSH
-git clone git@github.com:ross-ethridge/demucs.git
 cd demucs
-```
-2. Build the Docker image:
-```bash
-make build
-```
-The build clones the Demucs source, installs PyTorch with CUDA 11.8 support, patches torchaudio for compatibility, and pre-downloads all `htdemucs_ft` model checkpoints. **Expect this to take 10–20 minutes** on the first run — it needs to download PyTorch, torchaudio, all other Python dependencies, and the model files.
-
-3. Copy the track you want to split into the `input` folder (e.g., `input/mysong.mp3`).
-4. Run `demucs`:
-```bash
-make run track=mysong.mp3
+make setup
+docker compose up --build -d
 ```
 
-Separated stems are written to `output/<model>/<track-name>/` as individual `.wav` files.
+Then open **http://localhost** in your browser.
 
-#### Options
+`make setup` generates a `.env` with unique random values for all secrets — database password, MinIO credentials, and Rails secret key. No manual editing required. Just run `docker compose up --build -d` straight after.
 
-Option | Default Value | Description
---- | --- | ---
-`gpu`           | `false`    | Enable Nvidia CUDA support (requires an Nvidia GPU and the [Nvidia Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)).
-`model`         | `htdemucs` | The model used for audio separation. See the [Demucs docs](https://github.com/facebookresearch/demucs#separating-tracks) for a list of available models.
-`mp3output`     | `false`    | Output separated stems in `mp3` format instead of the default `wav`.
-`shifts`        | `1`        | Perform multiple predictions with random shifts of the input and average them. Makes prediction `N` times slower — only useful with a GPU.
-`overlap`       | `0.25`     | Amount of overlap between prediction windows (25%). Can be reduced to `0.1` to speed up separation.
-`jobs`          | `1`        | Number of parallel jobs. Multiplies RAM usage by the same factor.
-`splittrack`    |            | Extract only one stem (e.g. `drums`). Valid values: `bass`, `drums`, `vocals`, `other`.
+If you want to review or adjust any values (e.g. change the number of shifts or enable GPU), open `.env` in any text editor — all options are explained in the Configuration section below. Running `make setup` again will not overwrite an existing `.env`.
 
-#### Examples
-```bash
-# GPU-accelerated separation with mp3 output
-make run track=mysong.mp3 gpu=true mp3output=true
+On first run Docker will build the images and download the model checkpoints (~2 GB). This takes 10–20 minutes. Subsequent starts are fast.
 
-# Use the fine-tuned htdemucs model, extract only vocals
-make run track=mysong.mp3 model=htdemucs_ft splittrack=vocals
+---
 
-# CPU-only, reduce overlap for faster (lower quality) results
-make run track=mysong.mp3 overlap=0.1 jobs=4
-```
+## Configuration
 
-### Run Interactively
-
-To experiment with other `demucs` options on the command line, run the container interactively:
-
-```bash
-make run-interactive
-make run-interactive gpu=true
-```
-
-This drops you into a bash shell inside the container with the `input`, `output`, and `models` directories mounted. Only the `gpu` option applies to this target.
-
-## Web App
-
-The `web/` directory contains a Rails 8 application that provides a browser UI for uploading tracks, monitoring separation progress in real time, and downloading the individual stems.
-
-### Architecture
-
-- **Rails + Solid Queue** — job processing runs inside the same Puma process (`SOLID_QUEUE_IN_PUMA=true`); no separate worker container needed.
-- **PostgreSQL** — primary database (via the `db` service in docker-compose).
-- **Demucs container** — the web app shells out `docker run` for each track, using the Docker socket mounted into the container.
-- **Storage** — if AWS credentials are configured, stems are uploaded to S3 and served via expiring pre-signed URLs. Otherwise they are kept on the local `output` volume and served directly.
-
-### Prerequisites
-
-- Docker and Docker Compose
-
-### Configuration
-
-Copy `env.template` to `.env` and fill in your values:
+Copy `env.template` to `.env`:
 
 ```bash
 cp env.template .env
 ```
 
-| Variable | Required | Description |
+The app will not start without a `.env` file. Here is what each variable does and whether you need to change it for local use:
+
+### Required to run locally
+
+| Variable | Default | What to do |
 | --- | --- | --- |
-| `POSTGRES_USER` | Yes | PostgreSQL username |
-| `POSTGRES_PASSWORD` | Yes | PostgreSQL password |
-| `SECRET_KEY_BASE` | Yes | Random secret for Rails — generate with `docker run --rm ruby:4.0.1-slim ruby -e "require 'securerandom'; puts SecureRandom.hex(64)"` |
-| `AWS_ACCESS_KEY_ID` | No | IAM access key |
-| `AWS_SECRET_ACCESS_KEY` | No | IAM secret key |
-| `AWS_REGION` | No | S3 bucket region (e.g. `us-east-2`) |
-| `AWS_BUCKET` | No | S3 bucket name |
+| `POSTGRES_PASSWORD` | `changeme` | Change to anything — this is the password for the local Postgres container |
+| `SECRET_KEY_BASE` | *(blank)* | Must be set. Generate one with: `docker run --rm ruby:4.0.1-slim ruby -e "require 'securerandom'; puts SecureRandom.hex(64)"` — then paste the output into `.env` |
 
-**Storage:** If all four AWS variables are set, completed stems are uploaded to S3 and served via expiring pre-signed URLs. If any are omitted, stems are kept on the local `output` volume and served directly — no AWS account needed.
+### Optional / tuning
 
-> **Note:** Do not quote values in `.env`. Docker Compose v2 passes quoted values literally.
+| Variable | Default | Description |
+| --- | --- | --- |
+| `POSTGRES_USER` | `demucs` | Database username — fine to leave as-is |
+| `DEMUCS_GPU` | `false` | Set to `true` to use an Nvidia GPU (see GPU section below) |
+| `DEMUCS_SHIFTS` | `1` | Number of prediction passes. Higher = better quality but slower. `3`–`5` is a good balance |
+| `DEMUCS_THREADS` | `4` | CPU threads allocated to Demucs |
 
-### GPU acceleration (optional)
+### Not needed for local use
 
-By default the web app runs demucs on the CPU, which is slow. To enable GPU acceleration:
+The AWS/S3 variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_BUCKET`) are only needed if you want to store stems in S3. Leave them blank and stems will be stored on the local `output` volume instead — no AWS account required.
 
-1. Install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) on your host.
-2. Build the demucs image (if you haven't already):
-   ```bash
-   make build
-   ```
-3. Add the following to your `.env`:
+A minimal `.env` for local use looks like this:
+
+```
+POSTGRES_USER=demucs
+POSTGRES_PASSWORD=something_secret
+SECRET_KEY_BASE=paste_generated_value_here
+DEMUCS_GPU=false
+DEMUCS_SHIFTS=3
+DEMUCS_THREADS=4
+```
+
+---
+
+## GPU acceleration (optional)
+
+An Nvidia GPU dramatically speeds up processing — from ~5–10 minutes per track to under a minute.
+
+1. Install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) on your host
+2. Set in `.env`:
    ```
    DEMUCS_GPU=true
    ```
+3. Restart:
+   ```bash
+   docker compose up -d
+   ```
 
-The web app passes `--gpus all` to each `docker run` invocation when this is set.
+The image includes CUDA 11.8 wheels and supports RTX 4060 and earlier Ada Lovelace GPUs.
 
-### Build and run
+---
 
-First-time setup — copies `env.template` to `.env` and generates a `SECRET_KEY_BASE`:
+## Processing time
 
-```bash
-make setup
-```
+Processing time depends on track length, CPU speed, and `DEMUCS_SHIFTS`:
 
-Edit `.env` to set `POSTGRES_PASSWORD` and any other values, then start everything:
+| Shifts | Quality | Time (CPU, 6-core) |
+| --- | --- | --- |
+| `1` | Good | ~2–3 min |
+| `3` | Better | ~6–9 min |
+| `5` | Best | ~10–15 min |
 
-```bash
-make up
-```
+With a GPU (RTX 4060), all of the above take under a minute regardless of shifts.
 
-`make up` builds the demucs image and starts all Compose services in one step. The app is available at `http://localhost:3000`. On first start the entrypoint runs `db:prepare` automatically (creates tables and runs migrations).
+---
 
-To stop the app:
-
-```bash
-make down
-```
-
-To tail logs:
+## Stopping and restarting
 
 ```bash
-make logs
+# Stop
+docker compose down
+
+# Start again (no rebuild needed)
+docker compose up -d
+
+# View logs
+docker compose logs -f web
 ```
 
-### Rebuilding after gem changes
-
-Any time `web/Gemfile` is edited, update `Gemfile.lock` before rebuilding. If you have Ruby installed locally:
-
-```bash
-cd web && bundle install && cd ..
-```
-
-Otherwise, use Docker to regenerate it without a local Ruby install:
-
-```bash
-docker run --rm -v "$PWD/web":/app -w /app ruby:4.0.1-slim bundle install
-```
-
-Then rebuild as normal:
-
-```bash
-docker compose up --build -d
-```
+---
 
 ## License
-This repository is released under the MIT license as found in the [LICENSE](LICENSE) file.
+
+MIT — see [LICENSE](LICENSE).
+
+Demucs is developed by Meta Research and released under the MIT license. See the [Demucs repository](https://github.com/adefossez/demucs) for details.

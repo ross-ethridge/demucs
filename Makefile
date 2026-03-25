@@ -65,11 +65,26 @@ build: ## Build the docker image which supports running demucs with CPU only or 
 
 .PHONY:
 .SILENT:
-setup: ## First-time setup: copy env.template to .env and generate SECRET_KEY_BASE
-	@cp -n env.template .env || true
-	@secret=$$(docker run --rm ruby:4.0.1-slim ruby -e "require 'securerandom'; puts SecureRandom.hex(64)"); \
-	 sed -i "s|^SECRET_KEY_BASE=.*|SECRET_KEY_BASE=$$secret|" .env
-	@echo "Done. Edit .env to set POSTGRES_PASSWORD, then run: make up"
+setup: ## First-time setup: generate .env with unique secrets
+	@if [ -f .env ]; then echo ".env already exists, skipping."; exit 0; fi
+	@docker run --rm ruby:4.0.1-slim ruby -e " \
+	  require 'securerandom'; \
+	  puts 'POSTGRES_USER=demucs'; \
+	  puts 'POSTGRES_PASSWORD=' + SecureRandom.hex(16); \
+	  puts 'SECRET_KEY_BASE=' + SecureRandom.hex(64); \
+	  puts ''; \
+	  puts 'DEMUCS_GPU=false'; \
+	  puts 'DEMUCS_SHIFTS=3'; \
+	  puts 'DEMUCS_THREADS=4'; \
+	  puts ''; \
+	  puts '# MinIO (local S3-compatible storage)'; \
+	  puts 'AWS_ACCESS_KEY_ID=demucs'; \
+	  puts 'AWS_SECRET_ACCESS_KEY=' + SecureRandom.hex(16); \
+	  puts 'AWS_REGION=us-east-1'; \
+	  puts 'AWS_BUCKET=demucs'; \
+	  puts 'S3_ENDPOINT=http://minio:9000'; \
+	" > .env
+	@echo "Generated .env with unique secrets. Run: docker compose up --build -d"
 
 .PHONY:
 .SILENT:

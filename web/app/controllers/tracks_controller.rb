@@ -29,31 +29,11 @@ class TracksController < ApplicationController
     name     = params[:track][:name].presence || File.basename(original, File.extname(original))
     filename = "#{SecureRandom.hex(8)}_#{original}"
 
-    if ENV["FREE_MODE"] == "true"
-      track = Track.new(name: name, filename: filename, model: model, user: current_user)
-      track.audio_file.attach(blob)
-      track.save!
-      ProcessTrackJob.perform_later(track.id)
-      return redirect_to track, notice: "Your track is queued for processing."
-    end
-
-    price_id = Track::STRIPE_PRICES.fetch(model)
-
-    session = Stripe::Checkout::Session.create(
-      mode: "payment",
-      line_items: [{ price: price_id, quantity: 1 }],
-      metadata: {
-        blob_signed_id: blob.signed_id,
-        filename:       filename,
-        name:           name,
-        model:          model,
-        user_id:        current_user.id
-      },
-      success_url: "#{payments_success_url}?session_id={CHECKOUT_SESSION_ID}",
-      cancel_url:  payments_cancel_url
-    )
-
-    redirect_to session.url, allow_other_host: true
+    track = Track.new(name: name, filename: filename, model: model, user: current_user)
+    track.audio_file.attach(blob)
+    track.save!
+    ProcessTrackJob.perform_later(track.id)
+    redirect_to track, notice: "Your track is queued for processing."
   end
 
   def show

@@ -11,6 +11,19 @@ services:
     volumes:
       - /mnt/minio-data:/data
 
+  minio-init:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+        sleep 3 &&
+        mc alias set local http://minio:9000 $${AWS_ACCESS_KEY_ID} $${AWS_SECRET_ACCESS_KEY} &&
+        mc mb --ignore-existing local/$${AWS_BUCKET}
+      "
+    env_file:
+      - .env
+
   db:
     image: postgres:16
     restart: always
