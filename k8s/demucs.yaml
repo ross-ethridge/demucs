@@ -13,10 +13,11 @@ spec:
       labels:
         app: demucs
     spec:
+      imagePullSecrets:
+        - name: ghcr-pull-secret
       containers:
         - name: demucs
-          image: demucs:latest
-          imagePullPolicy: Never
+          image: ghcr.io/ross-ethridge/demucs:latest
           ports:
             - containerPort: 8080
           env:
