@@ -1,0 +1,8 @@
+{{ template "base" . }}
+
+[plugins."io.containerd.cri.v1.runtime".containerd]
+  default_runtime_name = "nvidia"
+
+[plugins."io.containerd.cri.v1.runtime"]
+  enable_cdi = true
+  cdi_spec_dirs = ["/etc/cdi"]

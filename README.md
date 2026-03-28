@@ -178,34 +178,67 @@ kubectl apply -k k8s/
 
 ## Local GPU deployment
 
-To run on a local k3s node with an Nvidia GPU (no TLS, accessible over plain HTTP):
+To run on a local k3s node with an NVIDIA GPU (no TLS, accessible over plain HTTP).
 
-### 1. Prerequisites — NVIDIA container toolkit for k3s
+### 1. Install NVIDIA drivers and container toolkit
+
+Install NVIDIA drivers for your GPU if not already present. Then install the container toolkit:
 
 ```bash
-# Install nvidia-container-toolkit
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
 curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
   | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
   | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
 sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
-
-# Configure containerd (k3s uses its own containerd instance)
-sudo nvidia-ctk runtime configure --runtime=containerd \
-  --config=/var/lib/rancher/k3s/agent/etc/containerd/config.toml
-
-sudo systemctl restart k3s
-
-# Deploy the NVIDIA device plugin
-kubectl apply -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.17.0/deployments/static/nvidia-device-plugin.yml
-
-# Verify the GPU is visible to k8s
-kubectl get nodes -o json | jq '.items[].status.allocatable | select(."nvidia.com/gpu")'
 ```
 
-### 2. Create secrets (no TLS_DOMAIN needed)
+Verify drivers are working:
 
 ```bash
+nvidia-smi
+```
+
+### 2. Configure k3s containerd for NVIDIA
+
+k3s uses its own embedded containerd instance. Two things need to be configured: the nvidia runtime must be set as the default, and CDI (Container Device Interface) must be enabled. A config template is included in the repo:
+
+```bash
+# Generate CDI device specs from the host driver
+sudo mkdir -p /etc/cdi
+sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+
+# Install the containerd config template
+sudo cp overlays/local/containerd-config.toml.tmpl \
+  /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+
+# Restart k3s to apply the config
+sudo systemctl restart k3s
+```
+
+The template (`overlays/local/containerd-config.toml.tmpl`) sets nvidia as the default container runtime and enables CDI. k3s regenerates its containerd config from this template on every restart.
+
+### 3. Deploy the NVIDIA device plugin
+
+The static DaemonSet from NVIDIA is designed to work with NVIDIA's GPU Operator and ships with locked-down defaults (no privileges, no driver mount) that prevent it from enumerating GPUs on a bare k3s node. A patched version is included in the repo:
+
+```bash
+kubectl apply -f overlays/local/nvidia-device-plugin.yaml
+```
+
+The patch adds `privileged: true` and mounts the host root at `/driver-root` so the plugin can access `libnvidia-ml.so` and enumerate GPUs.
+
+Verify the GPU is visible to k3s:
+
+```bash
+kubectl describe node <node-name> | grep nvidia
+# Should show: nvidia.com/gpu: 1
+```
+
+### 4. Create secrets (no TLS_DOMAIN needed)
+
+```bash
+kubectl create namespace demucs
+
 kubectl -n demucs create secret generic demucs-secrets \
   --from-literal=POSTGRES_USER=demucs \
   --from-literal=POSTGRES_PASSWORD=$(openssl rand -hex 16) \
@@ -215,9 +248,15 @@ kubectl -n demucs create secret generic demucs-secrets \
   --from-literal=AWS_BUCKET=demucs \
   --from-literal=SECRET_KEY_BASE=$(openssl rand -hex 64) \
   --from-literal=TLS_DOMAIN=""
+
+# GHCR pull secret
+kubectl -n demucs create secret docker-registry ghcr-pull-secret \
+  --docker-server=ghcr.io \
+  --docker-username=your-github-username \
+  --docker-password=<github-pat>
 ```
 
-### 3. Deploy using the local overlay
+### 5. Deploy using the local overlay
 
 ```bash
 kubectl apply -k overlays/local/
@@ -258,7 +297,7 @@ Processing time depends on track length, CPU speed, and `DEMUCS_SHIFTS`:
 | `3` | Better | ~6–9 min |
 | `5` | Best | ~10–15 min |
 
-With an Nvidia GPU, all of the above take under a minute. The demucs image includes CUDA 11.8 wheels. GPU support is not yet wired into the k8s deployment.
+With an NVIDIA GPU, all of the above take under a minute. The demucs image includes CUDA 11.8 wheels. GPU support is available via the local overlay — see [Local GPU deployment](#local-gpu-deployment).
 
 ---
 
