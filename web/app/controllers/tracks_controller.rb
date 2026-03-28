@@ -54,7 +54,9 @@ class TracksController < ApplicationController
     end
 
     if S3Storage.configured?
-      redirect_to S3Storage.browser_url(@track, params[:stem]), allow_other_host: true
+      response.headers["Content-Type"] = "audio/wav"
+      response.headers["Content-Disposition"] = "inline"
+      self.response_body = S3Storage.stream(@track, params[:stem])
     else
       path = @track.stem_path(params[:stem])
       send_file path, type: "audio/wav", disposition: "inline"

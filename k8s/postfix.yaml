@@ -13,6 +13,22 @@ spec:
       labels:
         app: postfix
     spec:
+      initContainers:
+        - name: dkim-init
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              cp /run/dkim-secret/dkim.private "/etc/opendkim/keys/www.demucsr.com,demucsr.com.private"
+              chmod 600 "/etc/opendkim/keys/www.demucsr.com,demucsr.com.private"
+              chown 101:104 "/etc/opendkim/keys/www.demucsr.com,demucsr.com.private"
+          volumeMounts:
+            - name: dkim-secret
+              mountPath: /run/dkim-secret/dkim.private
+              subPath: dkim.private
+            - name: dkim-keys
+              mountPath: /etc/opendkim/keys
       containers:
         - name: postfix
           image: boky/postfix
@@ -23,10 +39,19 @@ spec:
                   name: demucs-secrets
                   key: TLS_DOMAIN
             - name: HOSTNAME
-              valueFrom:
-                secretKeyRef:
-                  name: demucs-secrets
-                  key: TLS_DOMAIN
+              value: mail.demucsr.com
+            - name: DKIM_AUTOGENERATE
+              value: "true"
+          volumeMounts:
+            - name: dkim-keys
+              mountPath: /etc/opendkim/keys
+      volumes:
+        - name: dkim-secret
+          secret:
+            secretName: postfix-dkim
+            defaultMode: 0400
+        - name: dkim-keys
+          emptyDir: {}
 
 ---
 apiVersion: v1
