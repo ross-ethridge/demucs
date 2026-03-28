@@ -10,7 +10,7 @@ web/tmp/*
 .DS_Store
 **.claude*
 **CLAUDE.md
-**.env
+**.env*
 docker-compose.override.yml
 web/config/master.key
 web/config/credentials.yml.enc
