@@ -63,14 +63,51 @@ git clone https://github.com/ross-ethridge/demucs.git
 cd demucs
 ```
 
-### 2. Build and push images
+### 2. Configure your image registry
 
-Images are hosted on GHCR. `k8s/kustomization.yaml` is not committed — copy the example and set your registry:
+`k8s/kustomization.yaml` is not committed. Copy the example and set your GitHub username:
 
 ```bash
 cp k8s/kustomization.yaml.example k8s/kustomization.yaml
 # edit k8s/kustomization.yaml and replace your-github-username
 ```
+
+### 3. Create the namespace
+
+```bash
+kubectl apply -f k8s/namespace.yaml
+```
+
+### 4. Create secrets
+
+```bash
+# App secrets
+kubectl -n demucs create secret generic demucs-secrets \
+  --from-literal=POSTGRES_USER=demucs \
+  --from-literal=POSTGRES_PASSWORD=$(openssl rand -hex 16) \
+  --from-literal=AWS_ACCESS_KEY_ID=$(openssl rand -hex 16) \
+  --from-literal=AWS_SECRET_ACCESS_KEY=$(openssl rand -hex 32) \
+  --from-literal=AWS_REGION=us-east-1 \
+  --from-literal=AWS_BUCKET=demucs \
+  --from-literal=SECRET_KEY_BASE=$(openssl rand -hex 64) \
+  --from-literal=TLS_DOMAIN=your.domain.com
+
+# GHCR pull secret (create a GitHub PAT with read:packages scope)
+kubectl -n demucs create secret docker-registry ghcr-pull-secret \
+  --docker-server=ghcr.io \
+  --docker-username=your-github-username \
+  --docker-password=<github-pat>
+```
+
+Replace `your.domain.com` with your domain. Thruster obtains a TLS certificate automatically via Let's Encrypt.
+
+### 5. Create host directory for MinIO storage
+
+```bash
+sudo mkdir -p /mnt/minio-data
+```
+
+### 6. Build and push images
 
 ```bash
 docker build -t ghcr.io/your-github-username/demucs-web:latest ./web
@@ -82,50 +119,13 @@ docker push ghcr.io/your-github-username/demucs:latest
 
 The demucs image downloads model checkpoints during build. Allow 20–30 minutes on first build.
 
-Create a GHCR pull secret so k3s can pull the images:
-
-```bash
-kubectl -n demucs create secret docker-registry ghcr-pull-secret \
-  --docker-server=ghcr.io \
-  --docker-username=your-github-username \
-  --docker-password=<github-pat>
-```
-
-### 3. Create the namespace
-
-```bash
-kubectl apply -f k8s/namespace.yaml
-```
-
-### 4. Create the secret
-
-```bash
-kubectl -n demucs create secret generic demucs-secrets \
-  --from-literal=POSTGRES_USER=demucs \
-  --from-literal=POSTGRES_PASSWORD=$(openssl rand -hex 16) \
-  --from-literal=AWS_ACCESS_KEY_ID=$(openssl rand -hex 16) \
-  --from-literal=AWS_SECRET_ACCESS_KEY=$(openssl rand -hex 32) \
-  --from-literal=AWS_REGION=us-east-1 \
-  --from-literal=AWS_BUCKET=demucs \
-  --from-literal=SECRET_KEY_BASE=$(openssl rand -hex 64) \
-  --from-literal=TLS_DOMAIN=your.domain.com
-```
-
-Replace `your.domain.com` with your domain. Thruster will obtain a TLS certificate automatically via Let's Encrypt.
-
-### 5. Create host directories for MinIO storage
-
-```bash
-sudo mkdir -p /mnt/minio-data
-```
-
-### 6. Deploy
+### 7. Deploy
 
 ```bash
 kubectl apply -k k8s/
 ```
 
-### 7. Verify
+### 8. Verify
 
 ```bash
 kubectl get all -n demucs
