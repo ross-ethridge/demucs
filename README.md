@@ -220,7 +220,7 @@ kubectl -n demucs create secret generic demucs-secrets \
 ### 3. Deploy using the local overlay
 
 ```bash
-kubectl apply -k k8s/overlays/local/
+kubectl apply -k overlays/local/
 ```
 
 The overlay patches three things relative to the base deployment:
