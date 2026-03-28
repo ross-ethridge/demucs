@@ -2,7 +2,7 @@
 
 A self-hosted web app for splitting any song into its individual stems — bass, drums, vocals, and synth/guitar — powered by Meta's [Demucs](https://github.com/adefossez/demucs) AI model.
 
-Upload a track, wait a few minutes, download your stems as WAV files. No account required. Runs entirely on your own infrastructure.
+Upload a track, wait a few minutes, download your stems as WAV files. Runs entirely on your own infrastructure.
 
 ![demucs:r screenshot](docs/screenshot.png)
 
@@ -63,17 +63,28 @@ git clone https://github.com/ross-ethridge/demucs.git
 cd demucs
 ```
 
-### 2. Build the images on the k3s node
+### 2. Build and push images
+
+Images are hosted on GHCR. Build and push from the k3s node:
 
 ```bash
-docker build -t demucs-web:latest ./web
-docker build -t demucs:latest .
+docker build -t ghcr.io/ross-ethridge/demucs-web:latest ./web
+docker build -t ghcr.io/ross-ethridge/demucs:latest .
 
-docker save demucs-web:latest | k3s ctr images import -
-docker save demucs:latest     | k3s ctr images import -
+docker push ghcr.io/ross-ethridge/demucs-web:latest
+docker push ghcr.io/ross-ethridge/demucs:latest
 ```
 
-The demucs image pulls CUDA base + PyTorch wheels and downloads the model checkpoints during build. Allow 20–30 minutes on first build.
+The demucs image downloads model checkpoints during build. Allow 20–30 minutes on first build.
+
+Create a GHCR pull secret so k3s can pull the images:
+
+```bash
+kubectl -n demucs create secret docker-registry ghcr-pull-secret \
+  --docker-server=ghcr.io \
+  --docker-username=ross-ethridge \
+  --docker-password=<github-pat>
+```
 
 ### 3. Create the namespace
 
@@ -92,11 +103,10 @@ kubectl -n demucs create secret generic demucs-secrets \
   --from-literal=AWS_REGION=us-east-1 \
   --from-literal=AWS_BUCKET=demucs \
   --from-literal=SECRET_KEY_BASE=$(openssl rand -hex 64) \
-  --from-literal=TLS_DOMAIN=your.domain.com \
-  --from-literal=MINIO_PUBLIC_ENDPOINT=http://<node-ip>:9000
+  --from-literal=TLS_DOMAIN=your.domain.com
 ```
 
-Replace `your.domain.com` and `<node-ip>` with real values. `MINIO_PUBLIC_ENDPOINT` is the URL browsers use to stream stems directly from MinIO — it must be reachable from the outside.
+Replace `your.domain.com` with your domain. Thruster will obtain a TLS certificate automatically via Let's Encrypt.
 
 ### 5. Create host directories for MinIO storage
 
@@ -117,6 +127,28 @@ kubectl get all -n demucs
 ```
 
 All pods should reach `1/1 Running`. The `minio-init` job will complete once and then show `Completed`.
+
+---
+
+## User management
+
+The app requires a login. Accounts are managed via Rake tasks — there is no self-signup UI.
+
+```bash
+# Create a user (generates a random password)
+kubectl -n demucs exec deploy/web -- rails users:create EMAIL=you@example.com
+
+# List all users
+kubectl -n demucs exec deploy/web -- rails users:list
+
+# Delete a user
+kubectl -n demucs exec deploy/web -- rails users:delete EMAIL=you@example.com
+
+# Reset a user's password to a new generated one
+kubectl -n demucs exec deploy/web -- rails users:reset EMAIL=you@example.com
+```
+
+`users:create` and `users:reset` both print the generated password to stdout. Users can change their password after logging in via the **Change password** link in the nav.
 
 ---
 
@@ -167,8 +199,9 @@ kubectl -n demucs rollout restart deployment/demucs
 # Scale worker concurrency (edit JOB_CONCURRENCY in k8s/worker.yaml, then)
 kubectl apply -k k8s/
 
-# Access MinIO console
-# Browse to http://<node-ip>:9001
+# Access MinIO console (port-forward since it's not exposed publicly)
+kubectl -n demucs port-forward svc/minio 9001:9001
+# Then browse to http://localhost:9001
 # Credentials are the AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY from your secret
 ```
 

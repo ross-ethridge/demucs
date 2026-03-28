@@ -47,6 +47,7 @@
               </svg>
               Drop a Track
             <% end %>
+            <%= link_to "Change password", edit_password_path, class: "text-slate-400 hover:text-white text-sm transition-colors" %>
             <%= button_to "Sign out", session_path, method: :delete, class: "text-slate-400 hover:text-white text-sm transition-colors cursor-pointer bg-transparent border-0 p-0" %>
           <% else %>
             <%= link_to "Sign in", new_session_path, class: "text-slate-400 hover:text-white text-sm transition-colors" %>
