@@ -23,11 +23,11 @@ spec:
               value: production
             - name: RAILS_LOG_TO_STDOUT
               value: "true"
-            - name: RAILS_MASTER_KEY
+            - name: SECRET_KEY_BASE
               valueFrom:
                 secretKeyRef:
                   name: demucs-secrets
-                  key: RAILS_MASTER_KEY
+                  key: SECRET_KEY_BASE
             - name: DB_HOST
               value: db
             - name: DB_USERNAME

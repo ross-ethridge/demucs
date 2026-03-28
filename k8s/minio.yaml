@@ -70,3 +70,18 @@ spec:
       port: 9001
       targetPort: 9001
   type: ClusterIP
+
+---
+# Exposes MinIO API externally so browsers can fetch presigned URLs directly
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-public
+  namespace: demucs
+spec:
+  selector:
+    app: minio
+  ports:
+    - port: 9000
+      targetPort: 9000
+  type: LoadBalancer
