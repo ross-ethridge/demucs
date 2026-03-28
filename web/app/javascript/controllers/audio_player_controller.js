@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = [
-    "audio", "playIcon", "pauseIcon",
+    "audio", "playIcon", "pauseIcon", "loadingIcon",
     "scrubber", "fill", "currentTime", "duration",
     "stemBtn", "volume"
   ]
@@ -14,6 +14,8 @@ export default class extends Controller {
   connect() {
     this.audioTarget.addEventListener("loadedmetadata", this.#onMetadata.bind(this))
     this.audioTarget.addEventListener("play",           this.#onPlay.bind(this))
+    this.audioTarget.addEventListener("playing",        this.#startRaf.bind(this))
+    this.audioTarget.addEventListener("waiting",        this.#stopRaf.bind(this))
     this.audioTarget.addEventListener("pause",          this.#onPause.bind(this))
     this.audioTarget.addEventListener("ended",          this.#onPause.bind(this))
     this.#loadStem(this.stemValue)
@@ -72,17 +74,20 @@ export default class extends Controller {
 
   #onPlay() {
     this.playIconTarget.classList.add("hidden")
-    this.pauseIconTarget.classList.remove("hidden")
-    this.#startRaf()
+    this.pauseIconTarget.classList.add("hidden")
+    this.loadingIconTarget.classList.remove("hidden")
   }
 
   #onPause() {
+    this.loadingIconTarget.classList.add("hidden")
     this.playIconTarget.classList.remove("hidden")
     this.pauseIconTarget.classList.add("hidden")
     this.#stopRaf()
   }
 
   #startRaf() {
+    this.loadingIconTarget.classList.add("hidden")
+    this.pauseIconTarget.classList.remove("hidden")
     const tick = () => {
       const t = this.audioTarget.currentTime
       const d = this.audioTarget.duration
