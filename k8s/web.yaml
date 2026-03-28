@@ -18,7 +18,7 @@ spec:
         - name: ghcr-pull-secret
       containers:
         - name: web
-          image: ghcr.io/ross-ethridge/demucs-web:latest
+          image: demucs-web
           env:
             - name: RAILS_ENV
               value: production

@@ -9,3 +9,11 @@ resources:
   - web.yaml
   - worker.yaml
   - demucs.yaml
+
+images:
+  - name: demucs-web
+    newName: ghcr.io/your-github-username/demucs-web
+    newTag: latest
+  - name: demucs
+    newName: ghcr.io/your-github-username/demucs
+    newTag: latest

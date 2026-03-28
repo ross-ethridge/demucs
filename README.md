@@ -65,14 +65,19 @@ cd demucs
 
 ### 2. Build and push images
 
-Images are hosted on GHCR. Build and push from the k3s node:
+Images are hosted on GHCR. `k8s/kustomization.yaml` is not committed — copy the example and set your registry:
 
 ```bash
-docker build -t ghcr.io/ross-ethridge/demucs-web:latest ./web
-docker build -t ghcr.io/ross-ethridge/demucs:latest .
+cp k8s/kustomization.yaml.example k8s/kustomization.yaml
+# edit k8s/kustomization.yaml and replace your-github-username
+```
 
-docker push ghcr.io/ross-ethridge/demucs-web:latest
-docker push ghcr.io/ross-ethridge/demucs:latest
+```bash
+docker build -t ghcr.io/your-github-username/demucs-web:latest ./web
+docker build -t ghcr.io/your-github-username/demucs:latest .
+
+docker push ghcr.io/your-github-username/demucs-web:latest
+docker push ghcr.io/your-github-username/demucs:latest
 ```
 
 The demucs image downloads model checkpoints during build. Allow 20–30 minutes on first build.
@@ -82,7 +87,7 @@ Create a GHCR pull secret so k3s can pull the images:
 ```bash
 kubectl -n demucs create secret docker-registry ghcr-pull-secret \
   --docker-server=ghcr.io \
-  --docker-username=ross-ethridge \
+  --docker-username=your-github-username \
   --docker-password=<github-pat>
 ```
 
