@@ -97,6 +97,7 @@ def _process(job_id: str, data: dict):
         last_pct  = -1
         n_runs    = int(shifts) * 4   # 4 sources × shifts
 
+        device = os.environ.get("DEMUCS_DEVICE")  # "cpu", "cuda", or unset (auto-detect)
         cmd = [
             "python3", "-m", "demucs",
             "-n", model,
@@ -104,8 +105,10 @@ def _process(job_id: str, data: dict):
             "--shifts", shifts,
             "--overlap", "0.25",
             "-j", "1",
-            str(input_path),
         ]
+        if device:
+            cmd += ["-d", device]
+        cmd.append(str(input_path))
 
         with subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,

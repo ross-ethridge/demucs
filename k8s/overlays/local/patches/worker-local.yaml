@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: demucs
+spec:
+  template:
+    spec:
+      containers:
+        - name: worker
+          env:
+            - name: JOB_CONCURRENCY
+              value: "1"

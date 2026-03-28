@@ -176,6 +176,78 @@ kubectl apply -k k8s/
 
 ---
 
+## Local GPU deployment
+
+To run on a local k3s node with an Nvidia GPU (no TLS, accessible over plain HTTP):
+
+### 1. Prerequisites — NVIDIA container toolkit for k3s
+
+```bash
+# Install nvidia-container-toolkit
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+  | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+  | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
+
+# Configure containerd (k3s uses its own containerd instance)
+sudo nvidia-ctk runtime configure --runtime=containerd \
+  --config=/var/lib/rancher/k3s/agent/etc/containerd/config.toml
+
+sudo systemctl restart k3s
+
+# Deploy the NVIDIA device plugin
+kubectl apply -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.17.0/deployments/static/nvidia-device-plugin.yml
+
+# Verify the GPU is visible to k8s
+kubectl get nodes -o json | jq '.items[].status.allocatable | select(."nvidia.com/gpu")'
+```
+
+### 2. Create secrets (no TLS_DOMAIN needed)
+
+```bash
+kubectl -n demucs create secret generic demucs-secrets \
+  --from-literal=POSTGRES_USER=demucs \
+  --from-literal=POSTGRES_PASSWORD=$(openssl rand -hex 16) \
+  --from-literal=AWS_ACCESS_KEY_ID=$(openssl rand -hex 16) \
+  --from-literal=AWS_SECRET_ACCESS_KEY=$(openssl rand -hex 32) \
+  --from-literal=AWS_REGION=us-east-1 \
+  --from-literal=AWS_BUCKET=demucs \
+  --from-literal=SECRET_KEY_BASE=$(openssl rand -hex 64) \
+  --from-literal=TLS_DOMAIN=""
+```
+
+### 3. Deploy using the local overlay
+
+```bash
+kubectl apply -k k8s/overlays/local/
+```
+
+The overlay patches three things relative to the base deployment:
+
+| Change | Why |
+| --- | --- |
+| `DEMUCS_DEVICE=cuda` on demucs pod | Forces GPU inference instead of CPU |
+| `nvidia.com/gpu: 1` resource limit | Schedules the pod onto a GPU node |
+| `TLS_DOMAIN=""` on web pod | Thruster runs plain HTTP on port 80 |
+| `JOB_CONCURRENCY=1` on worker | One GPU can only run one job at a time |
+
+Browse to `http://<node-ip>` once pods are running.
+
+### GPU flag
+
+`DEMUCS_DEVICE` controls device selection in the demucs service:
+
+| Value | Behavior |
+| --- | --- |
+| unset | Auto-detects — uses CUDA if available, falls back to CPU |
+| `cuda` | Forces GPU (fails if no GPU is present) |
+| `cpu` | Forces CPU regardless of GPU availability |
+
+The production base deployment leaves `DEMUCS_DEVICE` unset (CPU, no GPU resource requested). The local overlay sets it to `cuda`.
+
+---
+
 ## Processing time
 
 Processing time depends on track length, CPU speed, and `DEMUCS_SHIFTS`:
