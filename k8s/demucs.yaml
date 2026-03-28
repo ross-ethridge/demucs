@@ -22,6 +22,10 @@ spec:
           env:
             - name: S3_ENDPOINT
               value: http://minio:9000
+            - name: OMP_NUM_THREADS
+              value: "6"
+            - name: MKL_NUM_THREADS
+              value: "6"
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -37,6 +41,10 @@ spec:
                 secretKeyRef:
                   name: demucs-secrets
                   key: AWS_REGION
+          resources:
+            requests:
+              cpu: "5"
+              memory: "8Gi"
           readinessProbe:
             httpGet:
               path: /health

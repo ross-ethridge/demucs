@@ -66,3 +66,5 @@ spec:
               value: http://minio:9000
             - name: JOB_CONCURRENCY
               value: "2"
+            - name: DEMUCS_SHIFTS
+              value: "3"
