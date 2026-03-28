@@ -1,4 +1,6 @@
 class ApplicationController < ActionController::Base
+  include Authentication
+
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern
 
@@ -10,10 +12,6 @@ class ApplicationController < ActionController::Base
   private
 
   def current_user
-    @current_user ||= User.first_or_create!(
-      email_address:     "local@localhost",
-      password:          SecureRandom.hex(16),
-      email_verified_at: Time.current
-    )
+    Current.session&.user
   end
 end

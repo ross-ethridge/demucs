@@ -2,7 +2,7 @@
 
 A self-hosted web app for splitting any song into its individual stems — bass, drums, vocals, and synth/guitar — powered by Meta's [Demucs](https://github.com/adefossez/demucs) AI model.
 
-Upload a track, wait a few minutes, download your stems as WAV files. No account required. Runs entirely on your machine.
+Upload a track, wait a few minutes, download your stems as WAV files. No account required. Runs entirely on your own infrastructure.
 
 ![demucs:r screenshot](docs/screenshot.png)
 
@@ -29,102 +29,113 @@ The model used is `htdemucs_ft` — the fine-tuned version of Demucs, which prod
 
 ---
 
-## Requirements
+## Architecture
 
-- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/)
-- ~10 GB disk space for the model and Docker images
-- A reasonably modern CPU (6+ cores recommended) or an Nvidia GPU for faster processing
+The app runs as a set of Kubernetes workloads:
+
+| Pod | Role |
+| --- | --- |
+| **web** | Rails app served by Thruster (handles TLS, HTTP/2) |
+| **worker** | Solid Queue job runner — submits tracks to the demucs service |
+| **demucs** | Long-running Python HTTP service — runs the AI model, uploads stems to MinIO |
+| **postgres** | Database for Rails |
+| **minio** | S3-compatible object store for audio files and stems |
+
+Rails is purely a UI layer. All audio processing happens in the demucs pod. Files move between services via MinIO — the worker tells the demucs pod where to find the input and where to write the output, and the demucs pod handles the rest.
 
 ---
 
-## Quick start
+## Requirements
+
+- A [k3s](https://k3s.io/) node (single-node is fine)
+- 6+ CPU cores and 16+ GB RAM recommended
+- ~15 GB disk space for images and model checkpoints
+- A domain name pointed at the node (Thruster handles TLS via Let's Encrypt)
+
+---
+
+## Deployment
+
+### 1. Clone the repo
 
 ```bash
 git clone https://github.com/ross-ethridge/demucs.git
 cd demucs
-make setup
-docker compose up --build -d
 ```
 
-Then open **http://localhost** in your browser.
+### 2. Build the images on the k3s node
 
-`make setup` generates a `.env` with unique random values for all secrets — database password, MinIO credentials, and Rails secret key. No manual editing required. Just run `docker compose up --build -d` straight after.
+```bash
+docker build -t demucs-web:latest ./web
+docker build -t demucs:latest .
 
-If you want to review or adjust any values (e.g. change the number of shifts or enable GPU), open `.env` in any text editor — all options are explained in the Configuration section below. Running `make setup` again will not overwrite an existing `.env`.
+docker save demucs-web:latest | k3s ctr images import -
+docker save demucs:latest     | k3s ctr images import -
+```
 
-On first run Docker will build the images and download the model checkpoints (~2 GB). This takes 10–20 minutes. Subsequent starts are fast.
+The demucs image pulls CUDA base + PyTorch wheels and downloads the model checkpoints during build. Allow 20–30 minutes on first build.
+
+### 3. Create the namespace
+
+```bash
+kubectl apply -f k8s/namespace.yaml
+```
+
+### 4. Create the secret
+
+```bash
+kubectl -n demucs create secret generic demucs-secrets \
+  --from-literal=POSTGRES_USER=demucs \
+  --from-literal=POSTGRES_PASSWORD=$(openssl rand -hex 16) \
+  --from-literal=AWS_ACCESS_KEY_ID=$(openssl rand -hex 16) \
+  --from-literal=AWS_SECRET_ACCESS_KEY=$(openssl rand -hex 32) \
+  --from-literal=AWS_REGION=us-east-1 \
+  --from-literal=AWS_BUCKET=demucs \
+  --from-literal=SECRET_KEY_BASE=$(openssl rand -hex 64) \
+  --from-literal=TLS_DOMAIN=your.domain.com \
+  --from-literal=MINIO_PUBLIC_ENDPOINT=http://<node-ip>:9000
+```
+
+Replace `your.domain.com` and `<node-ip>` with real values. `MINIO_PUBLIC_ENDPOINT` is the URL browsers use to stream stems directly from MinIO — it must be reachable from the outside.
+
+### 5. Create host directories for MinIO storage
+
+```bash
+sudo mkdir -p /mnt/minio-data
+```
+
+### 6. Deploy
+
+```bash
+kubectl apply -k k8s/
+```
+
+### 7. Verify
+
+```bash
+kubectl get all -n demucs
+```
+
+All pods should reach `1/1 Running`. The `minio-init` job will complete once and then show `Completed`.
 
 ---
 
 ## Configuration
 
-Copy `env.template` to `.env`:
+Tuning parameters are set directly in the manifests:
+
+| Setting | Manifest | Default | Description |
+| --- | --- | --- | --- |
+| `OMP_NUM_THREADS` | `k8s/demucs.yaml` | `6` | PyTorch CPU threads — set to physical core count |
+| `MKL_NUM_THREADS` | `k8s/demucs.yaml` | `6` | Intel MKL threads — keep in sync with above |
+| `DEMUCS_SHIFTS` | `k8s/worker.yaml` | `3` | Prediction passes — higher is slower but better quality |
+| `JOB_CONCURRENCY` | `k8s/worker.yaml` | `2` | Solid Queue worker threads |
+
+After changing any manifest value:
 
 ```bash
-cp env.template .env
+kubectl apply -k k8s/
 ```
-
-The app will not start without a `.env` file. Here is what each variable does:
-
-### Required
-
-| Variable | Default | What to do |
-| --- | --- | --- |
-| `POSTGRES_PASSWORD` | `changeme` | Change to anything — this is the password for the local Postgres container |
-| `SECRET_KEY_BASE` | *(blank)* | Must be set. Generate one with: `docker run --rm ruby:4.0.1-slim ruby -e "require 'securerandom'; puts SecureRandom.hex(64)"` — then paste the output into `.env` |
-
-### Optional / tuning
-
-| Variable | Default | Description |
-| --- | --- | --- |
-| `POSTGRES_USER` | `demucs` | Database username — fine to leave as-is |
-| `DEMUCS_GPU` | `false` | Set to `true` to use an Nvidia GPU (see GPU section below) |
-| `DEMUCS_SHIFTS` | `1` | Number of prediction passes. Higher = better quality but slower. `3`–`5` is a good balance |
-| `DEMUCS_THREADS` | `4` | CPU threads allocated to Demucs |
-
-### MinIO (local object storage)
-
-| Variable | Default | Description |
-| --- | --- | --- |
-| `AWS_ACCESS_KEY_ID` | `minioadmin` | MinIO root username — change if desired |
-| `AWS_SECRET_ACCESS_KEY` | `minioadmin` | MinIO root password — change if desired |
-| `AWS_REGION` | `us-east-1` | Region string (MinIO ignores this, but it must be set) |
-| `AWS_BUCKET` | `demucs` | Bucket name — created automatically on first run |
-
-The app uses [MinIO](https://min.io/) for file storage — a local S3-compatible object store that runs as part of the Docker Compose stack. No AWS account or external storage is needed. The MinIO console is available at **http://localhost:9001** once the stack is running.
-
-A minimal `.env` for local use looks like this:
-
-```
-POSTGRES_USER=demucs
-POSTGRES_PASSWORD=something_secret
-SECRET_KEY_BASE=paste_generated_value_here
-DEMUCS_GPU=false
-DEMUCS_SHIFTS=3
-DEMUCS_THREADS=4
-AWS_ACCESS_KEY_ID=minioadmin
-AWS_SECRET_ACCESS_KEY=minioadmin
-AWS_REGION=us-east-1
-AWS_BUCKET=demucs
-```
-
----
-
-## GPU acceleration (optional)
-
-An Nvidia GPU dramatically speeds up processing — from ~5–10 minutes per track to under a minute.
-
-1. Install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) on your host
-2. Set in `.env`:
-   ```
-   DEMUCS_GPU=true
-   ```
-3. Restart:
-   ```bash
-   docker compose up -d
-   ```
-
-The image includes CUDA 11.8 wheels and supports RTX 4060 and earlier Ada Lovelace GPUs.
 
 ---
 
@@ -132,27 +143,33 @@ The image includes CUDA 11.8 wheels and supports RTX 4060 and earlier Ada Lovela
 
 Processing time depends on track length, CPU speed, and `DEMUCS_SHIFTS`:
 
-| Shifts | Quality | Time (CPU, 6-core) |
+| Shifts | Quality | Time (6-core CPU) |
 | --- | --- | --- |
 | `1` | Good | ~2–3 min |
 | `3` | Better | ~6–9 min |
 | `5` | Best | ~10–15 min |
 
-With a GPU (RTX 4060), all of the above take under a minute regardless of shifts.
+With an Nvidia GPU, all of the above take under a minute. The demucs image includes CUDA 11.8 wheels. GPU support is not yet wired into the k8s deployment.
 
 ---
 
-## Stopping and restarting
+## Operations
 
 ```bash
-# Stop
-docker compose down
-
-# Start again (no rebuild needed)
-docker compose up -d
-
 # View logs
-docker compose logs -f web
+kubectl -n demucs logs -f deployment/web
+kubectl -n demucs logs -f deployment/worker
+kubectl -n demucs logs -f deployment/demucs
+
+# Restart a pod
+kubectl -n demucs rollout restart deployment/demucs
+
+# Scale worker concurrency (edit JOB_CONCURRENCY in k8s/worker.yaml, then)
+kubectl apply -k k8s/
+
+# Access MinIO console
+# Browse to http://<node-ip>:9001
+# Credentials are the AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY from your secret
 ```
 
 ---

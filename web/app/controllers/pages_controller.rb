@@ -1,4 +1,6 @@
 class PagesController < ApplicationController
+  allow_unauthenticated_access only: %i[legal sitemap]
+
   def home
     redirect_to tracks_path
   end
