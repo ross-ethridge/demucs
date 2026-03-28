@@ -54,8 +54,22 @@ class TracksController < ApplicationController
     end
 
     if S3Storage.configured?
-      send_data S3Storage.fetch(@track, params[:stem]),
-                type: "audio/wav", disposition: "inline"
+      range = request.headers["Range"]
+      if range
+        total  = S3Storage.size(@track, params[:stem])
+        m      = range.match(/bytes=(\d+)-(\d*)/)
+        s      = m[1].to_i
+        e      = m[2].present? ? m[2].to_i : total - 1
+        data   = S3Storage.fetch_range(@track, params[:stem], range)
+        response.status = 206
+        response.headers["Content-Type"]  = "audio/wav"
+        response.headers["Content-Range"] = "bytes #{s}-#{e}/#{total}"
+        response.headers["Accept-Ranges"] = "bytes"
+        render body: data
+      else
+        response.headers["Accept-Ranges"] = "bytes"
+        send_data S3Storage.fetch(@track, params[:stem]), type: "audio/wav", disposition: "inline"
+      end
     else
       send_file @track.stem_path(params[:stem]), type: "audio/wav", disposition: "inline"
     end
