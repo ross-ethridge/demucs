@@ -6,7 +6,7 @@
         <p class="text-slate-400 text-sm">Choose a strong new password for your account.</p>
       </div>
 
-      <%= form_with url: password_path(params[:token]), method: :put, class: "space-y-5" do |form| %>
+      <%= form_with url: passwords_path(token: params[:token]), method: :patch, class: "space-y-5" do |form| %>
         <div>
           <label class="block text-sm font-medium text-slate-300 mb-1.5">New password</label>
           <%= form.password_field :password, required: true, autocomplete: "new-password",

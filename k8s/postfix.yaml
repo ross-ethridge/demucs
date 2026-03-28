@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postfix
+  namespace: demucs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postfix
+  template:
+    metadata:
+      labels:
+        app: postfix
+    spec:
+      containers:
+        - name: postfix
+          image: boky/postfix
+          env:
+            - name: ALLOWED_SENDER_DOMAINS
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: TLS_DOMAIN
+            - name: HOSTNAME
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: TLS_DOMAIN
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postfix
+  namespace: demucs
+spec:
+  selector:
+    app: postfix
+  ports:
+    - port: 25
+      targetPort: 25
+  type: ClusterIP

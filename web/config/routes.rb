@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
   resource :session
   resource :registration, only: %i[new create]
+  resource :passwords, only: %i[new create edit update]
 
   get  "up"          => "rails/health#show",        as: :rails_health_check
   get  "legal"       => "pages#legal"
