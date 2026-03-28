@@ -47,14 +47,36 @@ Rails is purely a UI layer. All audio processing happens in the demucs pod. File
 
 ## Requirements
 
+**CPU deployment:**
 - A [k3s](https://k3s.io/) node (single-node is fine)
 - 6+ CPU cores and 16+ GB RAM recommended
 - ~15 GB disk space for images and model checkpoints
 - A domain name pointed at the node (Thruster handles TLS via Let's Encrypt)
 
+**GPU deployment:**
+- A k3s node with an NVIDIA GPU (RTX series recommended)
+- NVIDIA drivers and container toolkit installed on the host
+- No domain name required — runs on plain HTTP
+
 ---
 
 ## Deployment
+
+Two independent settings control how the app runs:
+
+| Setting | Controls |
+| --- | --- |
+| **Overlay** | `overlays/cpu/` for CPU inference, `overlays/gpu/` for GPU inference |
+| **`TLS_DOMAIN` in secret** | Set to your domain for HTTPS, set to `""` for plain HTTP |
+
+These combine freely:
+
+| Overlay | `TLS_DOMAIN` | Result |
+| --- | --- | --- |
+| `overlays/cpu/` | `your.domain.com` | CPU + TLS |
+| `overlays/cpu/` | `""` | CPU + no TLS |
+| `overlays/gpu/` | `your.domain.com` | GPU + TLS |
+| `overlays/gpu/` | `""` | GPU + no TLS |
 
 ### 1. Clone the repo
 
@@ -141,16 +163,16 @@ The app requires a login. Accounts are managed via Rake tasks — there is no se
 
 ```bash
 # Create a user (generates a random password)
-kubectl -n demucs exec deploy/web -- rails users:create EMAIL=you@example.com
+kubectl -n demucs exec deploy/web -- bin/rails users:create EMAIL=you@example.com
 
 # List all users
-kubectl -n demucs exec deploy/web -- rails users:list
+kubectl -n demucs exec deploy/web -- bin/rails users:list
 
 # Delete a user
-kubectl -n demucs exec deploy/web -- rails users:delete EMAIL=you@example.com
+kubectl -n demucs exec deploy/web -- bin/rails users:delete EMAIL=you@example.com
 
 # Reset a user's password to a new generated one
-kubectl -n demucs exec deploy/web -- rails users:reset EMAIL=you@example.com
+kubectl -n demucs exec deploy/web -- bin/rails users:reset EMAIL=you@example.com
 ```
 
 `users:create` and `users:reset` both print the generated password to stdout. Users can change their password after logging in via the **Change password** link in the nav.
@@ -176,9 +198,9 @@ kubectl apply -k k8s/
 
 ---
 
-## Local GPU deployment
+## GPU deployment
 
-To run on a local k3s node with an NVIDIA GPU (no TLS, accessible over plain HTTP).
+To run on a k3s node with an NVIDIA GPU. No TLS required — accessible over plain HTTP.
 
 ### 1. Install NVIDIA drivers and container toolkit
 
@@ -208,21 +230,21 @@ sudo mkdir -p /etc/cdi
 sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
 
 # Install the containerd config template
-sudo cp overlays/local/containerd-config.toml.tmpl \
+sudo cp overlays/gpu/containerd-config.toml.tmpl \
   /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
 
 # Restart k3s to apply the config
 sudo systemctl restart k3s
 ```
 
-The template (`overlays/local/containerd-config.toml.tmpl`) sets nvidia as the default container runtime and enables CDI. k3s regenerates its containerd config from this template on every restart.
+The template (`overlays/gpu/containerd-config.toml.tmpl`) sets nvidia as the default container runtime and enables CDI. k3s regenerates its containerd config from this template on every restart.
 
 ### 3. Deploy the NVIDIA device plugin
 
 The static DaemonSet from NVIDIA is designed to work with NVIDIA's GPU Operator and ships with locked-down defaults (no privileges, no driver mount) that prevent it from enumerating GPUs on a bare k3s node. A patched version is included in the repo:
 
 ```bash
-kubectl apply -f overlays/local/nvidia-device-plugin.yaml
+kubectl apply -f overlays/gpu/nvidia-device-plugin.yaml
 ```
 
 The patch adds `privileged: true` and mounts the host root at `/driver-root` so the plugin can access `libnvidia-ml.so` and enumerate GPUs.
@@ -234,7 +256,7 @@ kubectl describe node <node-name> | grep nvidia
 # Should show: nvidia.com/gpu: 1
 ```
 
-### 4. Create secrets (no TLS_DOMAIN needed)
+### 4. Create secrets
 
 ```bash
 kubectl create namespace demucs
@@ -256,22 +278,29 @@ kubectl -n demucs create secret docker-registry ghcr-pull-secret \
   --docker-password=<github-pat>
 ```
 
-### 5. Deploy using the local overlay
+If transferring secrets from another cluster (e.g. production), clear `TLS_DOMAIN` after copying — otherwise Thruster will redirect all traffic to HTTPS:
 
 ```bash
-kubectl apply -k overlays/local/
+kubectl -n demucs patch secret demucs-secrets \
+  --type='json' \
+  -p='[{"op":"replace","path":"/data/TLS_DOMAIN","value":""}]'
 ```
 
-The overlay patches three things relative to the base deployment:
+### 5. Deploy
+
+```bash
+kubectl apply -k overlays/gpu/
+```
+
+The overlay patches two things relative to the base:
 
 | Change | Why |
 | --- | --- |
 | `DEMUCS_DEVICE=cuda` on demucs pod | Forces GPU inference instead of CPU |
 | `nvidia.com/gpu: 1` resource limit | Schedules the pod onto a GPU node |
-| `TLS_DOMAIN=""` on web pod | Thruster runs plain HTTP on port 80 |
 | `JOB_CONCURRENCY=1` on worker | One GPU can only run one job at a time |
 
-Browse to `http://<node-ip>` once pods are running.
+TLS is controlled separately by `TLS_DOMAIN` in your secret — see [Deployment](#deployment).
 
 ### GPU flag
 
@@ -283,7 +312,7 @@ Browse to `http://<node-ip>` once pods are running.
 | `cuda` | Forces GPU (fails if no GPU is present) |
 | `cpu` | Forces CPU regardless of GPU availability |
 
-The production base deployment leaves `DEMUCS_DEVICE` unset (CPU, no GPU resource requested). The local overlay sets it to `cuda`.
+The CPU deployment leaves `DEMUCS_DEVICE` unset (no GPU resource requested). The GPU deployment sets it to `cuda`.
 
 ---
 
@@ -297,7 +326,7 @@ Processing time depends on track length, CPU speed, and `DEMUCS_SHIFTS`:
 | `3` | Better | ~6–9 min |
 | `5` | Best | ~10–15 min |
 
-With an NVIDIA GPU, all of the above take under a minute. The demucs image includes CUDA 11.8 wheels. GPU support is available via the local overlay — see [Local GPU deployment](#local-gpu-deployment).
+With an NVIDIA GPU, all of the above take under a minute. The demucs image includes CUDA 11.8 wheels. GPU support is available via the GPU deployment — see [GPU deployment](#gpu-deployment).
 
 ---
 

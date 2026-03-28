@@ -6,5 +6,4 @@ resources:
 
 patches:
   - path: patches/demucs-gpu.yaml
-  - path: patches/web-no-tls.yaml
-  - path: patches/worker-local.yaml
+  - path: patches/worker-gpu.yaml
