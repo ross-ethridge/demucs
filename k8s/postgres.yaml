@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: demucs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  strategy:
+    type: Recreate  # required — only one pod can hold the RWO PVC at a time
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              value: demucs_production
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "$(POSTGRES_USER)", "-d", "demucs_production"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: pgdata
+          persistentVolumeClaim:
+            claimName: pgdata
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  namespace: demucs
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP

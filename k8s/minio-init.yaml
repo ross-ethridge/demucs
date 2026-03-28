@@ -1,0 +1,47 @@
+# One-time job to create the S3 bucket in MinIO.
+# Re-run after bucket deletion with: kubectl -n demucs delete job minio-init && kubectl apply -f k8s/05-minio-init.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-init
+  namespace: demucs
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-for-minio
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z minio 9000; do
+                echo "waiting for minio..."; sleep 2
+              done
+      containers:
+        - name: mc
+          image: minio/mc
+          command:
+            - /bin/sh
+            - -c
+            - |
+              mc alias set local http://minio:9000 "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" &&
+              mc mb --ignore-existing "local/$AWS_BUCKET"
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: AWS_BUCKET

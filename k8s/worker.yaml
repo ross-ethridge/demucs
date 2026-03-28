@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: demucs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          image: CHANGE_ME/demucs-web:latest
+          # imagePullPolicy: Never
+          command: ["./bin/jobs"]
+          env:
+            - name: RAILS_ENV
+              value: production
+            - name: RAILS_LOG_TO_STDOUT
+              value: "true"
+            - name: RAILS_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: RAILS_MASTER_KEY
+            - name: DB_HOST
+              value: db
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: POSTGRES_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: POSTGRES_PASSWORD
+            - name: DEMUCS_ENDPOINT
+              value: http://demucs:8080
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: AWS_REGION
+            - name: AWS_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: AWS_BUCKET
+            - name: S3_ENDPOINT
+              value: http://minio:9000
+            - name: JOB_CONCURRENCY
+              value: "2"

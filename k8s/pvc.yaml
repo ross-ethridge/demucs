@@ -1,0 +1,62 @@
+# pgdata — Postgres data, single-pod
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pgdata
+  namespace: demucs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: local-path
+
+---
+# thruster — TLS certificate cache for the web pod, single-pod
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: thruster
+  namespace: demucs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: local-path
+
+---
+# minio-data — maps to existing /mnt/minio-data on the node
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: minio-data-pv
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/minio-data
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: demucs
+    name: minio-data
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-data
+  namespace: demucs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: ""
+  volumeName: minio-data-pv

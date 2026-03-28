@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: demucs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: CHANGE_ME/demucs-web:latest
+          # imagePullPolicy: Never
+          env:
+            - name: RAILS_ENV
+              value: production
+            - name: RAILS_SERVE_STATIC_FILES
+              value: "true"
+            - name: RAILS_LOG_TO_STDOUT
+              value: "true"
+            - name: RAILS_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: RAILS_MASTER_KEY
+            - name: DB_HOST
+              value: db
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: POSTGRES_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: POSTGRES_PASSWORD
+            - name: SOLID_QUEUE_IN_PUMA
+              value: "false"
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: AWS_REGION
+            - name: AWS_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: AWS_BUCKET
+            - name: S3_ENDPOINT
+              value: http://minio:9000
+            - name: HTTP_READ_TIMEOUT
+              value: "600"
+            - name: HTTP_WRITE_TIMEOUT
+              value: "600"
+            - name: STORAGE_PATH
+              value: /data/thruster
+            - name: TLS_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name: demucs-secrets
+                  key: TLS_DOMAIN
+          ports:
+            - name: http
+              containerPort: 80
+            - name: https
+              containerPort: 443
+          volumeMounts:
+            - name: thruster
+              mountPath: /data/thruster
+      volumes:
+        - name: thruster
+          persistentVolumeClaim:
+            claimName: thruster
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: demucs
+spec:
+  selector:
+    app: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: https
+      port: 443
+      targetPort: 443
+  type: LoadBalancer

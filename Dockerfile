@@ -43,8 +43,9 @@ RUN python3 -m demucs -d cpu -n htdemucs_ft test.mp3
 # Cleanup output - we just used this to download the model
 RUN rm -r separated
 
-VOLUME /data/input
-VOLUME /data/output
-VOLUME /data/models
+RUN python3 -m pip install flask boto3 --no-cache-dir
 
-ENTRYPOINT ["/bin/bash", "--login", "-c"]
+COPY demucs_server.py /demucs_server.py
+
+EXPOSE 8080
+ENTRYPOINT ["python3", "/demucs_server.py"]
