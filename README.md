@@ -121,7 +121,7 @@ kubectl -n demucs create secret docker-registry ghcr-pull-secret \
   --docker-password=<github-pat>
 ```
 
-Replace `your.domain.com` with your domain. Thruster obtains a TLS certificate automatically via Let's Encrypt.
+Set `TLS_DOMAIN` to your domain for HTTPS — Thruster obtains a TLS certificate automatically via Let's Encrypt. Leave it empty (`TLS_DOMAIN=""`) for plain HTTP with no TLS.
 
 ### 5. Create host directory for MinIO storage
 
