@@ -7,37 +7,13 @@ class S3Storage
     bucket.object(key(track, stem)).upload_file(local_path)
   end
 
-  def self.stream(track, stem, range: nil)
+  def self.fetch(track, stem)
     url = bucket.object(key(track, stem)).presigned_url(:get, expires_in: 300)
-    Enumerator.new do |yielder|
-      uri = URI.parse(url)
-      req = Net::HTTP::Get.new(uri.request_uri)
-      req["Range"] = range if range
-      Net::HTTP.start(uri.host, uri.port) do |http|
-        http.request(req) do |response|
-          response.read_body { |chunk| yielder << chunk }
-        end
-      end
-    end
+    uri = URI.parse(url)
+    Net::HTTP.start(uri.host, uri.port) { |http| http.get(uri.request_uri).body }
   end
 
-  def self.size(track, stem)
-    bucket.object(key(track, stem)).content_length
-  end
-
-  def self.browser_url(track, stem)
-    public_endpoint = ENV.fetch("MINIO_PUBLIC_ENDPOINT", "http://localhost:9000")
-    public_bucket = Aws::S3::Resource.new(
-      region:            ENV.fetch("AWS_REGION"),
-      access_key_id:     ENV.fetch("AWS_ACCESS_KEY_ID"),
-      secret_access_key: ENV.fetch("AWS_SECRET_ACCESS_KEY"),
-      endpoint:          public_endpoint,
-      force_path_style:  true
-    ).bucket(ENV.fetch("AWS_BUCKET"))
-    public_bucket.object(key(track, stem)).presigned_url(:get, expires_in: 3600)
-  end
-
-  def self.delete(track)
+def self.delete(track)
     Track::STEMS.each do |stem|
       bucket.object(key(track, stem)).delete
     end

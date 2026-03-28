@@ -54,27 +54,8 @@ class TracksController < ApplicationController
     end
 
     if S3Storage.configured?
-      range_header = request.headers["Range"]
-
-      if range_header
-        total      = S3Storage.size(@track, params[:stem])
-        m          = range_header.match(/bytes=(\d+)-(\d*)/)
-        start_byte = m[1].to_i
-        end_byte   = m[2].present? ? m[2].to_i : total - 1
-        length     = end_byte - start_byte + 1
-
-        response.status = 206
-        response.headers["Content-Type"]   = "audio/wav"
-        response.headers["Content-Range"]  = "bytes #{start_byte}-#{end_byte}/#{total}"
-        response.headers["Content-Length"] = length.to_s
-        response.headers["Accept-Ranges"]  = "bytes"
-        self.response_body = S3Storage.stream(@track, params[:stem], range: range_header)
-      else
-        response.headers["Content-Type"]        = "audio/wav"
-        response.headers["Content-Disposition"] = "inline"
-        response.headers["Accept-Ranges"]       = "bytes"
-        self.response_body = S3Storage.stream(@track, params[:stem])
-      end
+      send_data S3Storage.fetch(@track, params[:stem]),
+                type: "audio/wav", disposition: "inline"
     else
       send_file @track.stem_path(params[:stem]), type: "audio/wav", disposition: "inline"
     end
@@ -85,14 +66,12 @@ class TracksController < ApplicationController
       return head :bad_request
     end
 
+    filename = "#{@track.stem_name}_#{params[:stem]}.wav"
     if S3Storage.configured?
-      filename = "#{@track.stem_name}_#{params[:stem]}.wav"
-      response.headers["Content-Disposition"] = "attachment; filename=\"#{filename}\""
-      response.headers["Content-Type"] = "audio/wav"
-      self.response_body = S3Storage.stream(@track, params[:stem])
+      send_data S3Storage.fetch(@track, params[:stem]),
+                type: "audio/wav", disposition: "attachment", filename: filename
     else
-      path = @track.stem_path(params[:stem])
-      send_file path, filename: "#{@track.stem_name}_#{params[:stem]}.wav", type: "audio/wav", disposition: "attachment"
+      send_file @track.stem_path(params[:stem]), type: "audio/wav", disposition: "attachment", filename: filename
     end
   end
 
