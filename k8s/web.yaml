@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: web
-          image: CHANGE_ME/demucs-web:latest
-          # imagePullPolicy: Never
+          image: demucs-web:latest
+          imagePullPolicy: Never
           env:
             - name: RAILS_ENV
               value: production

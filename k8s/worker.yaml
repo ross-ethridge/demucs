@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: worker
-          image: CHANGE_ME/demucs-web:latest
-          # imagePullPolicy: Never
+          image: demucs-web:latest
+          imagePullPolicy: Never
           command: ["./bin/jobs"]
           env:
             - name: RAILS_ENV

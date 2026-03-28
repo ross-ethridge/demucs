@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: demucs
-          image: CHANGE_ME/demucs:latest
-          # imagePullPolicy: Never
+          image: demucs:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8080
           env:
