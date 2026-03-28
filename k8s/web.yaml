@@ -5,6 +5,7 @@ metadata:
   namespace: demucs
 spec:
   replicas: 1
+  revisionHistoryLimit: 2
   selector:
     matchLabels:
       app: web
@@ -66,11 +67,6 @@ spec:
                   key: AWS_BUCKET
             - name: S3_ENDPOINT
               value: http://minio:9000
-            - name: MINIO_PUBLIC_ENDPOINT
-              valueFrom:
-                secretKeyRef:
-                  name: demucs-secrets
-                  key: MINIO_PUBLIC_ENDPOINT
             - name: HTTP_READ_TIMEOUT
               value: "600"
             - name: HTTP_WRITE_TIMEOUT
