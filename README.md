@@ -143,8 +143,14 @@ The demucs image downloads model checkpoints during build. Allow 20–30 minutes
 
 ### 7. Deploy
 
+**CPU:**
 ```bash
-kubectl apply -k k8s/
+kubectl apply -k overlays/cpu/
+```
+
+**GPU** (requires node setup — see [GPU deployment](#gpu-deployment)):
+```bash
+kubectl apply -k overlays/gpu/
 ```
 
 ### 8. Verify
@@ -276,14 +282,6 @@ kubectl -n demucs create secret docker-registry ghcr-pull-secret \
   --docker-server=ghcr.io \
   --docker-username=your-github-username \
   --docker-password=<github-pat>
-```
-
-If transferring secrets from another cluster (e.g. production), clear `TLS_DOMAIN` after copying — otherwise Thruster will redirect all traffic to HTTPS:
-
-```bash
-kubectl -n demucs patch secret demucs-secrets \
-  --type='json' \
-  -p='[{"op":"replace","path":"/data/TLS_DOMAIN","value":""}]'
 ```
 
 ### 5. Deploy
