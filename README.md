@@ -51,12 +51,13 @@ Rails is purely a UI layer. All audio processing happens in the demucs pod. File
 - A [k3s](https://k3s.io/) node (single-node is fine)
 - 6+ CPU cores and 16+ GB RAM recommended
 - ~15 GB disk space for images and model checkpoints
-- A domain name pointed at the node (Thruster handles TLS via Let's Encrypt)
 
 **GPU deployment:**
 - A k3s node with an NVIDIA GPU (RTX series recommended)
 - NVIDIA drivers and container toolkit installed on the host
-- No domain name required — runs on plain HTTP
+
+**TLS (optional):**
+- A domain name pointed at the node — Thruster handles certificate provisioning via Let's Encrypt automatically
 
 ---
 
