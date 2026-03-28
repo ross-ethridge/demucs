@@ -12,7 +12,6 @@ export default class extends Controller {
   }
 
   connect() {
-    this.audioTarget.addEventListener("timeupdate",     this.#onTimeUpdate.bind(this))
     this.audioTarget.addEventListener("loadedmetadata", this.#onMetadata.bind(this))
     this.audioTarget.addEventListener("play",           this.#onPlay.bind(this))
     this.audioTarget.addEventListener("pause",          this.#onPause.bind(this))
@@ -21,6 +20,7 @@ export default class extends Controller {
   }
 
   disconnect() {
+    this.#stopRaf()
     this.audioTarget.pause()
     this.audioTarget.src = ""
   }
@@ -73,18 +73,28 @@ export default class extends Controller {
   #onPlay() {
     this.playIconTarget.classList.add("hidden")
     this.pauseIconTarget.classList.remove("hidden")
+    this.#startRaf()
   }
 
   #onPause() {
     this.playIconTarget.classList.remove("hidden")
     this.pauseIconTarget.classList.add("hidden")
+    this.#stopRaf()
   }
 
-  #onTimeUpdate() {
-    const t = this.audioTarget.currentTime
-    const d = this.audioTarget.duration
-    if (d && isFinite(d)) this.fillTarget.style.width = `${(t / d) * 100}%`
-    this.currentTimeTarget.textContent = this.#fmt(t)
+  #startRaf() {
+    const tick = () => {
+      const t = this.audioTarget.currentTime
+      const d = this.audioTarget.duration
+      if (d && isFinite(d)) this.fillTarget.style.width = `${(t / d) * 100}%`
+      this.currentTimeTarget.textContent = this.#fmt(t)
+      if (!this.audioTarget.paused) this._raf = requestAnimationFrame(tick)
+    }
+    this._raf = requestAnimationFrame(tick)
+  }
+
+  #stopRaf() {
+    if (this._raf) cancelAnimationFrame(this._raf)
   }
 
   #onMetadata() {
