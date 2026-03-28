@@ -7,16 +7,22 @@ class S3Storage
     bucket.object(key(track, stem)).upload_file(local_path)
   end
 
-  def self.stream(track, stem)
+  def self.stream(track, stem, range: nil)
     url = bucket.object(key(track, stem)).presigned_url(:get, expires_in: 300)
     Enumerator.new do |yielder|
       uri = URI.parse(url)
+      req = Net::HTTP::Get.new(uri.request_uri)
+      req["Range"] = range if range
       Net::HTTP.start(uri.host, uri.port) do |http|
-        http.request(Net::HTTP::Get.new(uri.request_uri)) do |response|
+        http.request(req) do |response|
           response.read_body { |chunk| yielder << chunk }
         end
       end
     end
+  end
+
+  def self.size(track, stem)
+    bucket.object(key(track, stem)).content_length
   end
 
   def self.browser_url(track, stem)
