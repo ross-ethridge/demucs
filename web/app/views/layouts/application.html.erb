@@ -50,7 +50,6 @@
             <%= button_to "Sign out", session_path, method: :delete, class: "text-slate-400 hover:text-white text-sm transition-colors cursor-pointer bg-transparent border-0 p-0" %>
           <% else %>
             <%= link_to "Sign in", new_session_path, class: "text-slate-400 hover:text-white text-sm transition-colors" %>
-            <%= link_to "Create account", new_registration_path, class: "inline-flex items-center bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors" %>
           <% end %>
         </div>
       </div>

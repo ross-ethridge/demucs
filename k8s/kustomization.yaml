@@ -9,4 +9,3 @@ resources:
   - web.yaml
   - worker.yaml
   - demucs.yaml
-  - postfix.yaml

@@ -66,13 +66,6 @@ spec:
                   key: AWS_BUCKET
             - name: S3_ENDPOINT
               value: http://minio:9000
-            - name: SMTP_ADDRESS
-              value: postfix
-            - name: SMTP_FROM
-              valueFrom:
-                secretKeyRef:
-                  name: demucs-secrets
-                  key: SMTP_FROM
             - name: MINIO_PUBLIC_ENDPOINT
               valueFrom:
                 secretKeyRef:

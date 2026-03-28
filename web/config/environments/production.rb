@@ -53,16 +53,7 @@ Rails.application.configure do
   config.active_job.queue_adapter = :solid_queue
   config.solid_queue.connects_to = { database: { writing: :queue } }
 
-  config.action_mailer.delivery_method = :smtp
-  config.action_mailer.smtp_settings = {
-    address: ENV.fetch("SMTP_ADDRESS", "postfix"),
-    port:    25
-  }
-  config.action_mailer.default_url_options = { host: ENV.fetch("TLS_DOMAIN", "localhost"), protocol: "https" }
-  config.action_mailer.raise_delivery_errors = false
-
-
-  # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
+# Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
   config.i18n.fallbacks = true
 
