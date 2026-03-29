@@ -37,11 +37,12 @@ The app runs as a set of Kubernetes workloads:
 | --- | --- |
 | **web** | Rails app served by Thruster (handles TLS, HTTP/2) |
 | **worker** | Solid Queue job runner — submits tracks to the demucs service |
-| **demucs** | Long-running Python HTTP service — runs the AI model, uploads stems to MinIO |
+| **demucs** | Long-running Python HTTP service — runs the AI model, uploads stems to S3 |
 | **postgres** | Database for Rails |
-| **minio** | S3-compatible object store for audio files and stems |
 
-Rails is purely a UI layer. All audio processing happens in the demucs pod. Files move between services via MinIO — the worker tells the demucs pod where to find the input and where to write the output, and the demucs pod handles the rest.
+Rails is purely a UI layer. All audio processing happens in the demucs pod. Files move between services via S3-compatible object storage — the worker tells the demucs pod where to find the input and where to write the output, and the demucs pod handles the rest.
+
+The app requires an S3-compatible endpoint. Any S3-compatible service works (AWS S3, Cloudflare R2, etc.). For self-hosted storage, [MinIO](https://github.com/ross-ethridge/min.io) is recommended — the [MinIO Operator](https://github.com/ross-ethridge/min.io) can deploy a tenant alongside this app in the same cluster.
 
 ---
 
@@ -55,6 +56,10 @@ Rails is purely a UI layer. All audio processing happens in the demucs pod. File
 **GPU deployment:**
 - A k3s node with an NVIDIA GPU (RTX series recommended)
 - NVIDIA drivers and container toolkit installed on the host
+
+**S3 storage (required):**
+- An S3-compatible endpoint — AWS S3, Cloudflare R2, or self-hosted [MinIO](https://github.com/ross-ethridge/min.io)
+- For in-cluster storage, deploy a MinIO tenant via the [MinIO Operator](https://github.com/ross-ethridge/min.io)
 
 **TLS (optional):**
 - A domain name pointed at the node — Thruster handles certificate provisioning via Let's Encrypt automatically
@@ -108,8 +113,8 @@ kubectl apply -f k8s/namespace.yaml
 kubectl -n demucs create secret generic demucs-secrets \
   --from-literal=POSTGRES_USER=demucs \
   --from-literal=POSTGRES_PASSWORD=$(openssl rand -hex 16) \
-  --from-literal=AWS_ACCESS_KEY_ID=$(openssl rand -hex 16) \
-  --from-literal=AWS_SECRET_ACCESS_KEY=$(openssl rand -hex 32) \
+  --from-literal=AWS_ACCESS_KEY_ID=<your-access-key> \
+  --from-literal=AWS_SECRET_ACCESS_KEY=<your-secret-key> \
   --from-literal=AWS_REGION=us-east-1 \
   --from-literal=AWS_BUCKET=demucs \
   --from-literal=SECRET_KEY_BASE=$(openssl rand -hex 64) \
@@ -122,12 +127,16 @@ kubectl -n demucs create secret docker-registry ghcr-pull-secret \
   --docker-password=<github-pat>
 ```
 
+`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are the credentials for your S3-compatible storage. `S3_ENDPOINT` is set directly in the deployment manifests (`k8s/web.yaml`, `k8s/worker.yaml`, `k8s/demucs.yaml`) — update it there to point at your endpoint before deploying.
+
 Set `TLS_DOMAIN` to your domain for HTTPS — Thruster obtains a TLS certificate automatically via Let's Encrypt. Leave it empty (`TLS_DOMAIN=""`) for plain HTTP with no TLS.
 
-### 5. Create host directory for MinIO storage
+### 5. Update S3 endpoint
 
-```bash
-sudo mkdir -p /mnt/minio-data
+Edit `k8s/web.yaml`, `k8s/worker.yaml`, and `k8s/demucs.yaml` and set `S3_ENDPOINT` to your S3-compatible endpoint. For a MinIO Operator tenant in the same cluster this would look like:
+
+```
+http://minio.<your-minio-namespace>.svc.cluster.local
 ```
 
 ### 6. Build and push images
@@ -271,8 +280,8 @@ kubectl create namespace demucs
 kubectl -n demucs create secret generic demucs-secrets \
   --from-literal=POSTGRES_USER=demucs \
   --from-literal=POSTGRES_PASSWORD=$(openssl rand -hex 16) \
-  --from-literal=AWS_ACCESS_KEY_ID=$(openssl rand -hex 16) \
-  --from-literal=AWS_SECRET_ACCESS_KEY=$(openssl rand -hex 32) \
+  --from-literal=AWS_ACCESS_KEY_ID=<your-access-key> \
+  --from-literal=AWS_SECRET_ACCESS_KEY=<your-secret-key> \
   --from-literal=AWS_REGION=us-east-1 \
   --from-literal=AWS_BUCKET=demucs \
   --from-literal=SECRET_KEY_BASE=$(openssl rand -hex 64) \
@@ -343,10 +352,9 @@ kubectl -n demucs rollout restart deployment/demucs
 # Scale worker concurrency (edit JOB_CONCURRENCY in k8s/worker.yaml, then)
 kubectl apply -k k8s/
 
-# Access MinIO console (port-forward since it's not exposed publicly)
-kubectl -n demucs port-forward svc/minio 9001:9001
-# Then browse to http://localhost:9001
-# Credentials are the AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY from your secret
+# Access MinIO console (if using the MinIO Operator — port-forward to your tenant namespace)
+kubectl -n <your-minio-namespace> port-forward svc/<tenant-name>-console 9090:9090
+# Then browse to http://localhost:9090
 ```
 
 ---
