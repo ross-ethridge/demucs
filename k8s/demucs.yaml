@@ -23,7 +23,7 @@ spec:
             - containerPort: 8080
           env:
             - name: S3_ENDPOINT
-              value: http://minio:9000
+              value: http://minio.demucs-minio.svc.cluster.local
             - name: OMP_NUM_THREADS
               value: "6"
             - name: MKL_NUM_THREADS

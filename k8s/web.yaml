@@ -66,7 +66,7 @@ spec:
                   name: demucs-secrets
                   key: AWS_BUCKET
             - name: S3_ENDPOINT
-              value: http://minio:9000
+              value: http://minio.demucs-minio.svc.cluster.local
             - name: HTTP_READ_TIMEOUT
               value: "600"
             - name: HTTP_WRITE_TIMEOUT

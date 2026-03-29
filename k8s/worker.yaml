@@ -65,7 +65,7 @@ spec:
                   name: demucs-secrets
                   key: AWS_BUCKET
             - name: S3_ENDPOINT
-              value: http://minio:9000
+              value: http://minio.demucs-minio.svc.cluster.local
             - name: JOB_CONCURRENCY
               value: "2"
             - name: DEMUCS_SHIFTS

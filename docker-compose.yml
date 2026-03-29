@@ -1,30 +1,4 @@
 services:
-  minio:
-    image: minio/minio
-    restart: always
-    command: server /data --console-address ":9001"
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER:     ${AWS_ACCESS_KEY_ID}
-      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY}
-    volumes:
-      - /mnt/minio-data:/data
-
-  minio-init:
-    image: minio/mc
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c "
-        sleep 3 &&
-        mc alias set local http://minio:9000 $${AWS_ACCESS_KEY_ID} $${AWS_SECRET_ACCESS_KEY} &&
-        mc mb --ignore-existing local/$${AWS_BUCKET}
-      "
-    env_file:
-      - .env
-
   db:
     image: postgres:16
     restart: always
@@ -62,14 +36,13 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION:            ${AWS_REGION}
       AWS_BUCKET:            ${AWS_BUCKET}
-      S3_ENDPOINT:           http://minio:9000
+      S3_ENDPOINT:           ${S3_ENDPOINT}
       HTTP_READ_TIMEOUT: "600"
       HTTP_WRITE_TIMEOUT: "600"
       STORAGE_PATH: /data/thruster
       TLS_DOMAIN: ${TLS_DOMAIN}
     depends_on:
       - db
-      - minio
     volumes:
       - input:/data/input
       - output:/data/output
@@ -98,12 +71,11 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION:            ${AWS_REGION}
       AWS_BUCKET:            ${AWS_BUCKET}
-      S3_ENDPOINT:           http://minio:9000
+      S3_ENDPOINT:           ${S3_ENDPOINT}
       JOB_CONCURRENCY: "2"
     command: ["./bin/jobs"]
     depends_on:
       - db
-      - minio
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - input:/data/input
