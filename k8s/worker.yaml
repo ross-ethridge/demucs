@@ -69,4 +69,4 @@ spec:
             - name: JOB_CONCURRENCY
               value: "2"
             - name: DEMUCS_SHIFTS
-              value: "3"
+              value: "5"
