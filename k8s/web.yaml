@@ -71,25 +71,9 @@ spec:
               value: "600"
             - name: HTTP_WRITE_TIMEOUT
               value: "600"
-            - name: STORAGE_PATH
-              value: /data/thruster
-            - name: TLS_DOMAIN
-              valueFrom:
-                secretKeyRef:
-                  name: demucs-secrets
-                  key: TLS_DOMAIN
           ports:
             - name: http
               containerPort: 80
-            - name: https
-              containerPort: 443
-          volumeMounts:
-            - name: thruster
-              mountPath: /data/thruster
-      volumes:
-        - name: thruster
-          persistentVolumeClaim:
-            claimName: thruster
 
 ---
 apiVersion: v1

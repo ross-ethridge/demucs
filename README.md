@@ -68,21 +68,13 @@ The app requires an S3-compatible endpoint. Any S3-compatible service works (AWS
 
 ## Deployment
 
-Two independent settings control how the app runs:
+One setting controls which inference backend the app uses:
 
 | Setting | Controls |
 | --- | --- |
 | **Overlay** | `overlays/cpu/` for CPU inference, `overlays/gpu/` for GPU inference |
-| **`TLS_DOMAIN` in secret** | Set to your domain for HTTPS, set to `""` for plain HTTP |
 
-These combine freely:
-
-| Overlay | `TLS_DOMAIN` | Result |
-| --- | --- | --- |
-| `overlays/cpu/` | `your.domain.com` | CPU + TLS |
-| `overlays/cpu/` | `""` | CPU + no TLS |
-| `overlays/gpu/` | `your.domain.com` | GPU + TLS |
-| `overlays/gpu/` | `""` | GPU + no TLS |
+TLS is handled by Traefik + cert-manager at the cluster level. Update the host and `secretName` in `k8s/ingress.yaml` to match your domain — cert-manager will provision the certificate automatically via Let's Encrypt.
 
 ### 1. Clone the repo
 
@@ -117,8 +109,7 @@ kubectl -n demucs create secret generic demucs-secrets \
   --from-literal=AWS_SECRET_ACCESS_KEY=<your-secret-key> \
   --from-literal=AWS_REGION=us-east-1 \
   --from-literal=AWS_BUCKET=demucs \
-  --from-literal=SECRET_KEY_BASE=$(openssl rand -hex 64) \
-  --from-literal=TLS_DOMAIN=your.domain.com
+  --from-literal=SECRET_KEY_BASE=$(openssl rand -hex 64)
 
 # GHCR pull secret (create a GitHub PAT with read:packages scope)
 kubectl -n demucs create secret docker-registry ghcr-pull-secret \
@@ -128,8 +119,6 @@ kubectl -n demucs create secret docker-registry ghcr-pull-secret \
 ```
 
 `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are the credentials for your S3-compatible storage. `S3_ENDPOINT` is set directly in the deployment manifests (`k8s/web.yaml`, `k8s/worker.yaml`, `k8s/demucs.yaml`) — update it there to point at your endpoint before deploying.
-
-Set `TLS_DOMAIN` to your domain for HTTPS — Thruster obtains a TLS certificate automatically via Let's Encrypt. Leave it empty (`TLS_DOMAIN=""`) for plain HTTP with no TLS.
 
 ### 5. Update S3 endpoint
 
@@ -284,8 +273,7 @@ kubectl -n demucs create secret generic demucs-secrets \
   --from-literal=AWS_SECRET_ACCESS_KEY=<your-secret-key> \
   --from-literal=AWS_REGION=us-east-1 \
   --from-literal=AWS_BUCKET=demucs \
-  --from-literal=SECRET_KEY_BASE=$(openssl rand -hex 64) \
-  --from-literal=TLS_DOMAIN=""
+  --from-literal=SECRET_KEY_BASE=$(openssl rand -hex 64)
 
 # GHCR pull secret
 kubectl -n demucs create secret docker-registry ghcr-pull-secret \
@@ -307,8 +295,6 @@ The overlay patches two things relative to the base:
 | `DEMUCS_DEVICE=cuda` on demucs pod | Forces GPU inference instead of CPU |
 | `nvidia.com/gpu: 1` resource limit | Schedules the pod onto a GPU node |
 | `JOB_CONCURRENCY=1` on worker | One GPU can only run one job at a time |
-
-TLS is controlled separately by `TLS_DOMAIN` in your secret — see [Deployment](#deployment).
 
 ### GPU flag
 

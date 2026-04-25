@@ -11,18 +11,3 @@ spec:
     requests:
       storage: 20Gi
   storageClassName: local-path
-
----
-# thruster — TLS certificate cache for the web pod, single-pod
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: thruster
-  namespace: demucs
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: local-path
