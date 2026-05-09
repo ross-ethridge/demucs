@@ -1,352 +1,58 @@
-# demucs:r
+# demucs-cli
 
-A self-hosted web app for splitting any song into its individual stems — bass, drums, vocals, and synth/guitar — powered by Meta's [Demucs](https://github.com/adefossez/demucs) AI model.
-
-Upload a track, wait a few minutes, download your stems as WAV files. Runs entirely on your own infrastructure.
-
-![demucs:r screenshot](docs/screenshot.png)
-
----
-
-## How it works
-
-Demucs uses a hybrid transformer neural network trained on thousands of songs to separate a mixed audio track into four isolated stems:
-
-| Stem | Contains |
-| --- | --- |
-| **Vocals** | Lead and backing vocals |
-| **Bass** | Bass guitar, sub bass |
-| **Drums** | Kick, snare, hi-hats, cymbals |
-| **Other** | Synths, guitars, keys, everything else |
-
-After separation, each stem is automatically post-processed:
-
-- **Silence removal** — gaps longer than 1 second below -40dB are stripped out, removing the near-silence bleed that source separation models produce between musical phrases
-- **Dynamic normalization** — `dynaudnorm` levels out the volume across each stem so quiet sections aren't buried next to loud ones
-- **Lossless output** — stems are written as 32-bit float WAV (`pcm_f32le`), the same format Demucs produces internally, with no quality loss
-
-The model used is `htdemucs_ft` — the fine-tuned version of Demucs, which produces the highest quality results.
-
----
-
-## Architecture
-
-The app runs as a set of Kubernetes workloads:
-
-| Pod | Role |
-| --- | --- |
-| **web** | Rails app served by Thruster (handles TLS, HTTP/2) |
-| **worker** | Solid Queue job runner — submits tracks to the demucs service |
-| **demucs** | Long-running Python HTTP service — runs the AI model, uploads stems to S3 |
-| **postgres** | Database for Rails |
-
-Rails is purely a UI layer. All audio processing happens in the demucs pod. Files move between services via S3-compatible object storage — the worker tells the demucs pod where to find the input and where to write the output, and the demucs pod handles the rest.
-
-The app requires an S3-compatible endpoint. Any S3-compatible service works (AWS S3, Cloudflare R2, etc.). For self-hosted storage, [MinIO](https://github.com/ross-ethridge/min.io) is recommended — the [MinIO Operator](https://github.com/ross-ethridge/min.io) can deploy a tenant alongside this app in the same cluster.
-
----
+A Python CLI for splitting audio into stems — vocals, drums, bass, and other — powered by Meta's [htdemucs_ft](https://github.com/adefossez/demucs) model. Runs locally on an NVIDIA GPU.
 
 ## Requirements
 
-**CPU deployment:**
-- A [k3s](https://k3s.io/) node (single-node is fine)
-- 6+ CPU cores and 16+ GB RAM recommended
-- ~15 GB disk space for images and model checkpoints
+- Python 3.8+
+- NVIDIA GPU with CUDA support
+- pip
+- ffmpeg (`sudo apt install ffmpeg` on Ubuntu/WSL)
 
-**GPU deployment:**
-- A k3s node with an NVIDIA GPU (RTX series recommended)
-- NVIDIA drivers and container toolkit installed on the host
-
-**S3 storage (required):**
-- An S3-compatible endpoint — AWS S3, Cloudflare R2, or self-hosted [MinIO](https://github.com/ross-ethridge/min.io)
-- For in-cluster storage, deploy a MinIO tenant via the [MinIO Operator](https://github.com/ross-ethridge/min.io)
-
-**TLS (optional):**
-- A domain name pointed at the node — Thruster handles certificate provisioning via Let's Encrypt automatically
-
----
-
-## Deployment
-
-One setting controls which inference backend the app uses:
-
-| Setting | Controls |
-| --- | --- |
-| **Overlay** | `overlays/cpu/` for CPU inference, `overlays/gpu/` for GPU inference |
-
-TLS is handled by Traefik + cert-manager at the cluster level. Update the host and `secretName` in `k8s/ingress.yaml` to match your domain — cert-manager will provision the certificate automatically via Let's Encrypt.
-
-### 1. Clone the repo
+## Installation
 
 ```bash
-git clone https://github.com/ross-ethridge/demucs.git
-cd demucs
+make install
 ```
 
-### 2. Configure your image registry
+This runs two steps: installs PyTorch and torchaudio with CUDA 12.6 support from the official PyTorch wheel index, then installs demucs and remaining dependencies from PyPI. The first time you run the app it will also download the `htdemucs_ft` model weights (~1GB) and cache them in `./models/`.
 
-`k8s/kustomization.yaml` is not committed. Copy the example and set your GitHub username:
+## Usage
 
 ```bash
-cp k8s/kustomization.yaml.example k8s/kustomization.yaml
-# edit k8s/kustomization.yaml and replace your-github-username
+python demucs_cli.py /path/to/song.wav
 ```
 
-### 3. Create the namespace
-
-```bash
-kubectl apply -f k8s/namespace.yaml
-```
-
-### 4. Create secrets
-
-```bash
-# App secrets
-kubectl -n demucs create secret generic demucs-secrets \
-  --from-literal=POSTGRES_USER=demucs \
-  --from-literal=POSTGRES_PASSWORD=$(openssl rand -hex 16) \
-  --from-literal=AWS_ACCESS_KEY_ID=<your-access-key> \
-  --from-literal=AWS_SECRET_ACCESS_KEY=<your-secret-key> \
-  --from-literal=AWS_REGION=us-east-1 \
-  --from-literal=AWS_BUCKET=demucs \
-  --from-literal=SECRET_KEY_BASE=$(openssl rand -hex 64)
-
-# GHCR pull secret (create a GitHub PAT with read:packages scope)
-kubectl -n demucs create secret docker-registry ghcr-pull-secret \
-  --docker-server=ghcr.io \
-  --docker-username=your-github-username \
-  --docker-password=<github-pat>
-```
-
-`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are the credentials for your S3-compatible storage. `S3_ENDPOINT` is set directly in the deployment manifests (`k8s/web.yaml`, `k8s/worker.yaml`, `k8s/demucs.yaml`) — update it there to point at your endpoint before deploying.
-
-### 5. Update S3 endpoint
-
-Edit `k8s/web.yaml`, `k8s/worker.yaml`, and `k8s/demucs.yaml` and set `S3_ENDPOINT` to your S3-compatible endpoint. For a MinIO Operator tenant in the same cluster this would look like:
+Stems are saved to `./output/htdemucs_ft/<trackname>/`:
 
 ```
-http://minio.<your-minio-namespace>.svc.cluster.local
+output/
+  htdemucs_ft/
+    song/
+      vocals.wav
+      drums.wav
+      bass.wav
+      other.wav
 ```
 
-### 6. Build and push images
+### Options
 
-```bash
-docker build -t ghcr.io/your-github-username/demucs-web:latest ./web
-docker build -t ghcr.io/your-github-username/demucs:latest .
-
-docker push ghcr.io/your-github-username/demucs-web:latest
-docker push ghcr.io/your-github-username/demucs:latest
-```
-
-The demucs image downloads model checkpoints during build. Allow 20–30 minutes on first build.
-
-### 7. Deploy
-
-**CPU:**
-```bash
-kubectl apply -k overlays/cpu/
-```
-
-**GPU** (requires node setup — see [GPU deployment](#gpu-deployment)):
-```bash
-kubectl apply -k overlays/gpu/
-```
-
-### 8. Verify
-
-```bash
-kubectl get all -n demucs
-```
-
-All pods should reach `1/1 Running`. The `minio-init` job will complete once and then show `Completed`.
-
----
-
-## User management
-
-The app requires a login. Accounts are managed via Rake tasks — there is no self-signup UI.
-
-```bash
-# Create a user (generates a random password)
-kubectl -n demucs exec deploy/web -- bin/rails users:create EMAIL=you@example.com
-
-# List all users
-kubectl -n demucs exec deploy/web -- bin/rails users:list
-
-# Delete a user
-kubectl -n demucs exec deploy/web -- bin/rails users:delete EMAIL=you@example.com
-
-# Reset a user's password to a new generated one
-kubectl -n demucs exec deploy/web -- bin/rails users:reset EMAIL=you@example.com
-```
-
-`users:create` and `users:reset` both print the generated password to stdout. Users can change their password after logging in via the **Change password** link in the nav.
-
----
-
-## Configuration
-
-Tuning parameters are set directly in the manifests:
-
-| Setting | Manifest | Default | Description |
-| --- | --- | --- | --- |
-| `OMP_NUM_THREADS` | `k8s/demucs.yaml` | `6` | PyTorch CPU threads — set to physical core count |
-| `MKL_NUM_THREADS` | `k8s/demucs.yaml` | `6` | Intel MKL threads — keep in sync with above |
-| `DEMUCS_SHIFTS` | `k8s/worker.yaml` | `3` | Prediction passes — higher is slower but better quality |
-| `JOB_CONCURRENCY` | `k8s/worker.yaml` | `2` | Solid Queue worker threads |
-
-After changing any manifest value:
-
-```bash
-kubectl apply -k k8s/
-```
-
----
-
-## GPU deployment
-
-To run on a k3s node with an NVIDIA GPU. No TLS required — accessible over plain HTTP.
-
-### 1. Install NVIDIA drivers and container toolkit
-
-Install NVIDIA drivers for your GPU if not already present. Then install the container toolkit:
-
-```bash
-curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
-curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
-  | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
-  | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
-sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
-```
-
-Verify drivers are working:
-
-```bash
-nvidia-smi
-```
-
-### 2. Configure k3s containerd for NVIDIA
-
-k3s uses its own embedded containerd instance. Two things need to be configured: the nvidia runtime must be set as the default, and CDI (Container Device Interface) must be enabled. A config template is included in the repo:
-
-```bash
-# Generate CDI device specs from the host driver
-sudo mkdir -p /etc/cdi
-sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
-
-# Install the containerd config template
-sudo cp overlays/gpu/containerd-config.toml.tmpl \
-  /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
-
-# Restart k3s to apply the config
-sudo systemctl restart k3s
-```
-
-The template (`overlays/gpu/containerd-config.toml.tmpl`) sets nvidia as the default container runtime and enables CDI. k3s regenerates its containerd config from this template on every restart.
-
-### 3. Deploy the NVIDIA device plugin
-
-The static DaemonSet from NVIDIA is designed to work with NVIDIA's GPU Operator and ships with locked-down defaults (no privileges, no driver mount) that prevent it from enumerating GPUs on a bare k3s node. A patched version is included in the repo:
-
-```bash
-kubectl apply -f overlays/gpu/nvidia-device-plugin.yaml
-```
-
-The patch adds `privileged: true` and mounts the host root at `/driver-root` so the plugin can access `libnvidia-ml.so` and enumerate GPUs.
-
-Verify the GPU is visible to k3s:
-
-```bash
-kubectl describe node <node-name> | grep nvidia
-# Should show: nvidia.com/gpu: 1
-```
-
-### 4. Create secrets
-
-```bash
-kubectl create namespace demucs
-
-kubectl -n demucs create secret generic demucs-secrets \
-  --from-literal=POSTGRES_USER=demucs \
-  --from-literal=POSTGRES_PASSWORD=$(openssl rand -hex 16) \
-  --from-literal=AWS_ACCESS_KEY_ID=<your-access-key> \
-  --from-literal=AWS_SECRET_ACCESS_KEY=<your-secret-key> \
-  --from-literal=AWS_REGION=us-east-1 \
-  --from-literal=AWS_BUCKET=demucs \
-  --from-literal=SECRET_KEY_BASE=$(openssl rand -hex 64)
-
-# GHCR pull secret
-kubectl -n demucs create secret docker-registry ghcr-pull-secret \
-  --docker-server=ghcr.io \
-  --docker-username=your-github-username \
-  --docker-password=<github-pat>
-```
-
-### 5. Deploy
-
-```bash
-kubectl apply -k overlays/gpu/
-```
-
-The overlay patches two things relative to the base:
-
-| Change | Why |
-| --- | --- |
-| `DEMUCS_DEVICE=cuda` on demucs pod | Forces GPU inference instead of CPU |
-| `nvidia.com/gpu: 1` resource limit | Schedules the pod onto a GPU node |
-| `JOB_CONCURRENCY=1` on worker | One GPU can only run one job at a time |
-
-### GPU flag
-
-`DEMUCS_DEVICE` controls device selection in the demucs service:
-
-| Value | Behavior |
-| --- | --- |
-| unset | Auto-detects — uses CUDA if available, falls back to CPU |
-| `cuda` | Forces GPU (fails if no GPU is present) |
-| `cpu` | Forces CPU regardless of GPU availability |
-
-The CPU deployment leaves `DEMUCS_DEVICE` unset (no GPU resource requested). The GPU deployment sets it to `cuda`.
-
----
-
-## Processing time
-
-Processing time depends on track length, CPU speed, and `DEMUCS_SHIFTS`:
-
-| Shifts | Quality | Time (6-core CPU) |
+| Flag | Default | Description |
 | --- | --- | --- |
-| `1` | Good | ~2–3 min |
-| `3` | Better | ~6–9 min |
-| `5` | Best | ~10–15 min |
+| `--output`, `-o` | `./output` | Directory to write stems into |
+| `--model`, `-n` | `htdemucs_ft` | Demucs model to use |
+| `--shifts` | `10` | Shifts averaged per prediction — higher is better quality but slower |
 
-With an NVIDIA GPU, all of the above take under a minute. The demucs image includes CUDA 11.8 wheels. GPU support is available via the GPU deployment — see [GPU deployment](#gpu-deployment).
-
----
-
-## Operations
+### Examples
 
 ```bash
-# View logs
-kubectl -n demucs logs -f deployment/web
-kubectl -n demucs logs -f deployment/worker
-kubectl -n demucs logs -f deployment/demucs
+# Basic usage
+python demucs_cli.py /path/to/song.wav
 
-# Restart a pod
-kubectl -n demucs rollout restart deployment/demucs
-
-# Scale worker concurrency (edit JOB_CONCURRENCY in k8s/worker.yaml, then)
-kubectl apply -k k8s/
-
-# Access MinIO console (if using the MinIO Operator — port-forward to your tenant namespace)
-kubectl -n <your-minio-namespace> port-forward svc/<tenant-name>-console 9090:9090
-# Then browse to http://localhost:9090
+# Write stems to a specific directory
+python demucs_cli.py /path/to/song.wav --output ~/stems
 ```
 
----
+## Output format
 
-## License
-
-MIT — see [LICENSE](LICENSE).
-
-Demucs is developed by Meta Research and released under the MIT license. See the [Demucs repository](https://github.com/adefossez/demucs) for details.
+Stems are written as 32-bit float WAV files at 44.1kHz. No dynamic processing or normalization is applied — the stems are at their natural levels relative to the original mix.
